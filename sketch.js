@@ -37,7 +37,7 @@ let game = function(p){
     console.log("setup")
     myGameEngine.Setup(60, true, 800, 800);
     
-    //myGameEngine.debug = true;
+    myGameEngine.debug = true;
     myGameEngine.rayDebug = false;
     
     player1 = new GameObject(myGameEngine, globalP5.createVector(0,-200))
@@ -1042,14 +1042,22 @@ class RigidBody {
     
   }
   
-  applyDrag(drag){
+  applyDrag(drag, ignoreVertival=false, ignoreHorizontal=false){
     const dragMagnitude = this.Velocity.copy().mag() * drag;
-
-    // Calculate the direction of the drag force (opposite to velocity)
     const dragDirection = this.Velocity.copy().normalize().mult(-1);
 
-    // Apply the drag force to the velocity
-    this.addForce(dragDirection, dragMagnitude);
+    if (ignoreVertival){
+      this.addForce(globalP5.createVector(dragDirection.x, 0), dragMagnitude.x);
+    }
+
+    else if(ignoreHorizontal){
+      this.addForce(globalP5.createVector(0, dragDirection.y), dragMagnitude.y);
+    }
+
+    else{
+      this.addForce(dragDirection, dragMagnitude);
+    }
+    
   }
   
   applyGravity(){
@@ -1593,7 +1601,7 @@ class GameEngine {
     this.rays = [];
     this.toDebug = [];
 
-    
+    this.cull = false
       
     this.gameObjects = [];
     this.playerObjects = [];
@@ -1996,7 +2004,7 @@ class GameEngine {
     // chatgpt code ends here
   }
   
-  circleCheck(radius, position){
+  circleCheck(radius, position, gameObjectValues){
     let physCheckObject = new GameObject(this, position)
     physCheckObject.addCircleCollider(radius, true, false, globalP5.createVector(0,0))
     
@@ -2007,7 +2015,7 @@ class GameEngine {
 
 
 
-    const objects = Object.values(this.gameObjectValues);
+    const objects = Object.values(gameObjectValues);
       for (let i = 0; i < objects.length - 1; i++) {
         for (const collider of objects[i].colliders){
       
@@ -2019,7 +2027,7 @@ class GameEngine {
     const collidingWith = circleCheckCollider.collidingWith;
   
     physCheckObject.delete()
-    
+  
     return collidingWith
   }
 
@@ -2112,28 +2120,42 @@ class GameEngine {
 
 
 
-  checkAllCollisions(){
-    const objects = Object.values(this.gameObjectValues);
-      for (let i = 0; i < objects.length - 1; i++) {
-        for (let j = i + 1; j < objects.length; j++) {
+  checkAllCollisions(gameObjectValues){
+    try{
+      const objects = Object.values(gameObjectValues);
+      for (let i = 0; i <= objects.length - 1; i++){
+        for (let j = i + 1; j <= objects.length - 1; j++){
           for (const collider1 of objects[i].colliders){
-            for (const collider2 of objects[j].colliders)
+            for (const collider2 of objects[j].colliders){
               this.detectCollision(collider1, collider2)
-                   
-                   
-                
-              }
             }
+          }
         }
       }
+    }
+
+    catch(err){
+      console.log(err)
+    }
+  
+  }
   
   
+
+  addCulling(gameObject, range){
+    this.cullingObject = gameObject;
+    this.cullingRange = range;
+    this.cull = true;
+
+  }
+
   update(){
     if (this.resizeToFit){
         this.screenWidth = globalP5.windowWidth;
         this.screenHeight = globalP5.windowHeight;
 
     }
+
 
 
     globalP5.background(3);
@@ -2144,75 +2166,85 @@ class GameEngine {
     this.drawBackground(this.backgroundImage, this.backgroundPos, this.backgroundSize)
     globalP5.frameRate(this.FPS)
     
-    this.gameObjectValues = this.gameObjects.map(obj => obj.objectName);
+    let gameObjectValues = this.gameObjects.map(obj => obj.objectName);
 
-    
-    
-    this.checkAllCollisions()
-    
-    for(let i = 0; i <= this.playerObjects.length - 1; i++){
-        this.playerObjects[i].updatePlayer();
+    if (this.cull){
+      let culledObjects = this.circleCheck(this.cullingRange, this.cullingObject.Transform.Position, gameObjectValues).map(collider => collider.gameObject);
+      gameObjectValues = culledObjects
+      gameObjectValues.push(this.cullingObject)
     }
 
-    this.enemySystem.update()
-
-    for (const name in this.gameObjectValues) {
-    if (this.gameObjectValues.hasOwnProperty(name)) {
-      const gameObject = this.gameObjectValues[name];
-      
-      gameObject.updateComponents();
-      gameObject.collidingWith = [];
-      
-      }}
-
-
-   
-    
-    
-
-    this.weaponSystem.update();
-    this.projectileSystem.update();
-
-    if (this.mainCamera !== null){
-      this.mainCamera.update()    
-        }
-    
-    for (const name in this.gameObjectValues) {
-      if (this.gameObjectValues.hasOwnProperty(name)) {
-        const gameObject = this.gameObjectValues[name];
-        
-        gameObject.renderComponents();
-
-        if (this.debug){
-          for (let i = 0; i <= this.rays.length - 1; i++) {
-            globalP5.stroke("green");
-            if(this.rayDebug){
-              globalP5.line(this.rays[i][0].x, this.rays[i][0].y, this.rays[i][1].x, this.rays[i][1].y);
-            }
-            
-          }
-        }
-      
-        
-        
   
+      this.checkAllCollisions(gameObjectValues)
+      
+      for(let i = 0; i <= this.playerObjects.length - 1; i++){
+          this.playerObjects[i].updatePlayer();
       }
-    }
 
-    if (this.debug){
-      for (let i = 0; i <= this.toDebug.length -1; i++){
-        globalP5.noFill()
-        globalP5.stroke(0, 255, 255)
+      this.enemySystem.update()
+
+      for (const name in gameObjectValues) {
+      if (gameObjectValues.hasOwnProperty(name)) {
+        const gameObject = gameObjectValues[name];
         
-        globalP5.drawingContext.setLineDash([1, 5]);
-        globalP5.circle(this.toDebug[i].position.x, this.toDebug[i].position.y, this.toDebug[i].radius*2)
-        globalP5.fill("white")
-        globalP5.drawingContext.setLineDash([0,0]);
+        gameObject.updateComponents();
+        gameObject.collidingWith = [];
+        
+        }}
+
+
+    
+      
+      
+
+      this.weaponSystem.update();
+      this.projectileSystem.update();
+
+      if (this.mainCamera !== null){
+        this.mainCamera.update()    
+          }
+      
+      for (const name in gameObjectValues) {
+        if (gameObjectValues.hasOwnProperty(name)) {
+          const gameObject = gameObjectValues[name];
+          
+          gameObject.renderComponents();
+
+          if (this.debug){
+            for (let i = 0; i <= this.rays.length - 1; i++) {
+              globalP5.stroke("green");
+              if(this.rayDebug){
+                globalP5.line(this.rays[i][0].x, this.rays[i][0].y, this.rays[i][1].x, this.rays[i][1].y);
+              }
+              
+            }
+          }
+        
+          
+          
+    
+        }
       }
-    }
+
+      if (this.debug){
+        for (let i = 0; i <= this.toDebug.length -1; i++){
+          globalP5.noFill()
+          globalP5.stroke(0, 255, 255)
+          
+          globalP5.drawingContext.setLineDash([1, 5]);
+          globalP5.circle(this.toDebug[i].position.x, this.toDebug[i].position.y, this.toDebug[i].radius*2)
+          globalP5.fill("white")
+          globalP5.drawingContext.setLineDash([0,0]);
+        }
+      }
     
     
+
+
+
   }
+
+
 }
 
 
@@ -2235,6 +2267,8 @@ export class MonoBehaviour {
   
     return directionNormal
   }
+
+  
   
 }
 
