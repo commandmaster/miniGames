@@ -2171,7 +2171,7 @@ class GameEngine {
     if (this.cull){
       let culledObjects = this.circleCheck(this.cullingRange, this.cullingObject.Transform.Position, gameObjectValues).map(collider => collider.gameObject);
       gameObjectValues = culledObjects
-      gameObjectValues.push(this.cullingObject)
+      
     }
 
   
