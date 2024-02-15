@@ -37,7 +37,7 @@ let game = function(p){
     console.log("setup")
     myGameEngine.Setup(60, true, 800, 800);
     
-    myGameEngine.debug = true;
+    //myGameEngine.debug = true;
     myGameEngine.rayDebug = false;
     
     player1 = new GameObject(myGameEngine, globalP5.createVector(0,-200))
@@ -142,10 +142,17 @@ class GameObject {
     
     const length = Object.keys(this.gameEngine.gameObjects).length;
     
-    const objectName = String(length)
-    this.name = objectName
     
+    let objectName = String(length);
     
+
+    if (name !== null){
+      objectName = name;
+      
+    }
+
+    this.name = objectName;
+
     
     this.gameEngine.gameObjects.push({objectName:this});
     
@@ -174,7 +181,7 @@ class GameObject {
     for (let i = this.gameEngine.gameObjects.length-1; i >= 0; i--){
       if (Object.values(this.gameEngine.gameObjects[i])[0].name === this.name){
         this.gameEngine.gameObjects.splice(i, 1)
-        
+        console.log("deleted")
         
       }
     }
@@ -1571,6 +1578,10 @@ class ScriptSystem{
 
 
 
+class PhysCheckCirle extends GameObject{
+  
+}
+
 class GameEngine {
   constructor(){
     this.inputSystem = new InputSystem();
@@ -2003,6 +2014,7 @@ class GameEngine {
 
     // chatgpt code ends here
   }
+
   
   circleCheck(radius, position, gameObjectValues){
     let physCheckObject = new GameObject(this, position)
