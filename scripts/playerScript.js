@@ -20,7 +20,7 @@ export default class Player{
       this.bounceHit = false;
 
 
-      this.gameEngine.addCulling(this.gameObject, 1000)
+      this.gameEngine.addCulling(this.gameObject, 2500)
     }
 
     Update(){

@@ -23,7 +23,7 @@ export default class Enemy{
         }
 
         if (wasHit){
-            //this.gameObject.delete();
+            this.gameObject.delete();
         }
 
     }

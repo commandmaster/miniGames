@@ -9,9 +9,7 @@
 
 let player1;
 let lavaFloor;
-
-
-
+let uniqueEnemyId = 0;
 
 
 let sketch;
@@ -40,7 +38,7 @@ let game = function(p){
     //myGameEngine.debug = true;
     myGameEngine.rayDebug = false;
     
-    player1 = new GameObject(myGameEngine, globalP5.createVector(0,-200))
+    player1 = new GameObject(myGameEngine, globalP5.createVector(0,-200), "player1")
     player1.addRigidBody(1, 0.8, 0.007)
     player1.addCircleCollider(30, false, true, globalP5.createVector(0,0), "Player")
     player1.rigidBody.gravityScale = 0.03
@@ -58,21 +56,19 @@ let game = function(p){
     myGameEngine.addCamera(player1, globalP5.createVector(0, 200));
 
 
-    lavaFloor = new GameObject(myGameEngine, globalP5.createVector(-500000, 200))
-    lavaFloor.addRigidBody(1000000000000000000, 0.5, 0);
-    lavaFloor.addBoxCollider(globalP5.createVector(1000000, 1000), false, true, globalP5.createVector(0, 0), "lava");
+    lavaFloor = new GameObject(myGameEngine, globalP5.createVector(-25000, 200), "lavaFloor")
+    lavaFloor.addRigidBody(100000000000, 0.5, 0);
+    lavaFloor.addBoxCollider(globalP5.createVector(50000, 1000), false, true, globalP5.createVector(0, 0), "lava");
     lavaFloor.rigidBody.gravityScale = 0;
-    lavaFloor.addSpriteRenderer("rect", globalP5.createVector(1000000, 1000), globalP5.createVector(255,20,0), true, globalP5.color(255,80,0))
-    
+    lavaFloor.addSpriteRenderer("rect", globalP5.createVector(50000, 1000), globalP5.createVector(255,20,0), true, globalP5.color(255,80,0))
+    lavaFloor.ignoreCulling = true;
 
-    spawnEnemys(100)
+    spawnEnemys(0.01, 0.1, globalP5.createVector(-5000, -1000), globalP5.createVector(5000, -100))
   }
 
   p.draw = function(){
     myGameEngine.update();
 
-  
-    
   };
   
   
@@ -82,21 +78,24 @@ let game = function(p){
 }
 
 
-function spawnEnemy(pos, radius, color, health){
-  const enemy = new GameObject(myGameEngine, pos, health)
+function spawnEnemy(pos, radius, color, health, name){
+  const enemy = new Enemy(myGameEngine, pos, health, name)
   enemy.addRigidBody(1000000, 0.5)
   enemy.addCircleCollider(radius, false, false, globalP5.createVector(0,0), "enemy")
   enemy.rigidBody.gravityScale = 0;
   enemy.addSpriteRenderer("circle", radius*2, color, true, globalP5.color(color.x, color.y, color.z))
   enemy.addScript("enemyScript");
   enemy.addTag("enemy")
+
+  
 }
 
   
 
-function spawnEnemys(enemyCount){
-  for (let i = 0; i < enemyCount; i++){
-    spawnEnemy(globalP5.createVector(globalP5.random(-10000, 10000), globalP5.random(-1000, 0)), globalP5.random(20, 30), globalP5.createVector(globalP5.random(200, 255), globalP5.random(10, 80), 0), 5)
+function spawnEnemys(densityLower, densityUpper, rangeX, rangeY){
+  for (let i = 0; i < Math.round((rangeUpper - rangeLower) * globalP5.random(densityLower, densityUpper)); i++){
+    uniqueEnemyId += 1;
+    spawnEnemy(globalP5.createVector(globalP5.random(rangeX.x, rangeY.x), globalP5.random(rangeY.y, rangeY.y)), 25, globalP5.createVector(globalP5.random(180, 255), globalP5.random(0, 70), 0), 5, String(uniqueEnemyId))
   }
 }
 
@@ -148,13 +147,13 @@ class GameObject {
 
     if (name !== null){
       objectName = name;
-      
     }
 
     this.name = objectName;
 
+    this.ignoreCulling = false;
     
-    this.gameEngine.gameObjects.push({objectName:this});
+    this.gameEngine.gameObjects[objectName] = this;
     
     
     this.tags = []
@@ -178,13 +177,17 @@ class GameObject {
   }
   
   delete() {
-    for (let i = this.gameEngine.gameObjects.length-1; i >= 0; i--){
-      if (Object.values(this.gameEngine.gameObjects[i])[0].name === this.name){
-        this.gameEngine.gameObjects.splice(i, 1)
-        console.log("deleted")
-        
-      }
+    if(this.gameEngine.gameObjects[this.name].name !== "circleCheckObject"){
+      console.log(this.gameEngine.gameObjects[this.name])
     }
+    
+    
+    this.scripts = {};
+    delete this.gameEngine.gameObjects[this.name];
+
+    //console.log(Object.values(this.gameEngine.gameObjects).length)
+  
+      
   }
   
 
@@ -321,10 +324,9 @@ class GameObject {
 
 
 class Enemy extends GameObject{
-  constructor(gameEngine, initPos, health){
-    super(gameEngine, initPos)
+  constructor(gameEngine, initPos, health, name){
+    super(gameEngine, initPos, name)
     this.health = health;
-
   }
 }
 
@@ -1614,7 +1616,7 @@ class GameEngine {
 
     this.cull = false
       
-    this.gameObjects = [];
+    this.gameObjects = {};
     this.playerObjects = [];
     this.debug = false;
     this.rayDebug = true;
@@ -2017,7 +2019,7 @@ class GameEngine {
 
   
   circleCheck(radius, position, gameObjectValues){
-    let physCheckObject = new GameObject(this, position)
+    let physCheckObject = new GameObject(this, position, "circleCheckObject")
     physCheckObject.addCircleCollider(radius, true, false, globalP5.createVector(0,0))
     
     this.toDebug.push({"radius":radius, "position":position})
@@ -2027,10 +2029,9 @@ class GameEngine {
 
 
 
-    const objects = Object.values(gameObjectValues);
+    const objects = gameObjectValues;
       for (let i = 0; i < objects.length - 1; i++) {
         for (const collider of objects[i].colliders){
-      
             this.detectCollision(circleCheckCollider, collider)
           }
   
@@ -2152,6 +2153,36 @@ class GameEngine {
   
   }
   
+  cullObjects(range, position, gameObjectValues){
+    let physCheckObject = new GameObject(this, position, "circleCheckObject")
+    physCheckObject.addCircleCollider(range, true, false, globalP5.createVector(0,0))
+    
+    let circleCheckCollider = physCheckObject.colliders[0];
+    circleCheckCollider.collidingWith = []
+
+    let culledObjects = []
+
+    const objects = gameObjectValues;
+      for (let i = 0; i < objects.length; i++) {
+        //console.log(objects[i])
+        if (objects[i].ignoreCulling){
+          culledObjects.push(objects[i])
+        }
+
+        for (const collider of objects[i].colliders){
+            this.detectCollision(circleCheckCollider, collider)
+        }
+  
+    }
+
+    const collidingWith = circleCheckCollider.collidingWith.forEach(collider => culledObjects.push(collider.gameObject));
+    
+
+    physCheckObject.delete()
+    
+    //console.log(culledObjects)
+    return culledObjects;
+  }
   
 
   addCulling(gameObject, range){
@@ -2178,11 +2209,11 @@ class GameEngine {
     this.drawBackground(this.backgroundImage, this.backgroundPos, this.backgroundSize)
     globalP5.frameRate(this.FPS)
     
-    let gameObjectValues = this.gameObjects.map(obj => obj.objectName);
+    let gameObjectValues = Object.values(this.gameObjects)
 
     if (this.cull){
-      let culledObjects = this.circleCheck(this.cullingRange, this.cullingObject.Transform.Position, gameObjectValues).map(collider => collider.gameObject);
-      gameObjectValues = culledObjects
+      let culledObjects = this.cullObjects(this.cullingRange, this.cullingObject.Transform.Position, gameObjectValues)
+      gameObjectValues = culledObjects;
       
     }
 
