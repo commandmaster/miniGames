@@ -9,21 +9,33 @@ export default class EnemySpawner{
 
     Start(){
         this.uniqueEnemyId = 0;
-        this.spawnEnemys(0.000003, 0.000007, this.p5.createVector(-50000, 50000), this.p5.createVector(-5000, 100))
+        //this.spawnEnemys(0.000003, 0.000007, this.p5.createVector(-50000, 50000), this.p5.createVector(-5000, 100))
         this.playerPosition = this.gameEngine.gameObjects["player1"].Transform.Position;
         this.currentChunk = this.p5.createVector(0, 0);
-        this.lastChunk = this.p5.createVector(0, 0);    
+        this.lastChunk = this.p5.createVector(0, 0); 
+        this.loadedChunks = {};   
         
     }
 
     Update(){
         this.currentChunk = this.getChunk();
         
+        if (this.currentChunk.x != this.lastChunk.x || this.currentChunk.y != this.lastChunk.y){
+            this.lastChunk = this.currentChunk;
+            this.loadChunk(this.currentChunk);
+        }
         
     }
 
     getChunk(){
         return this.p5.createVector(Math.floor(this.playerPosition.x / 5000), Math.floor(this.playerPosition.y / 5000))
+    }
+
+    loadChunk(chunk){
+        if (this.loadedChunks[chunk.x + " " + chunk.y] == undefined){
+            this.spawnEnemys(0.000003, 0.000003, this.p5.createVector(chunk.x * 5000, chunk.x * 5000 + 5000), this.p5.createVector(chunk.y * 5000, chunk.y * 5000 + 5000))
+            this.loadedChunks[chunk.x + " " + chunk.y] = true;
+        }
     }
 
 
