@@ -20,6 +20,8 @@ let game = function(p){
   globalP5 = p;
 
   p.preload = function(){
+    //globalP5.colorMode(globalP5.HSB, 255);
+
     myGameEngine = new GameEngine();
     imageSystem = new ImageSystem();
     
@@ -32,42 +34,42 @@ let game = function(p){
   };
 
   p.setup = function(){
+    
     console.log("setup")
     myGameEngine.Setup(60, true, 800, 800);
     
     //myGameEngine.debug = true;
     myGameEngine.rayDebug = false;
+
+    globalP5.brightness(100);
     
     player1 = new GameObject(myGameEngine, globalP5.createVector(0,-200), "player1")
     player1.addRigidBody(1, 0.8, 0.007)
     player1.addCircleCollider(30, false, true, globalP5.createVector(0,0), "Player")
     player1.rigidBody.gravityScale = 0.03
     player1.addTag("Player")
-    //player1.addPlatformerPlayerController(0.2, 0.1, 10, 10, 1)
     
-    //player1.addAnimator();
-    //player1.animator.createAnimation("default", imageSystem.getImage("player1"), 1, 0.3);
-    //player1.animator.transition("default");
 
-    player1.addSpriteRenderer("circle", 60, globalP5.createVector(0,200,200), true, globalP5.color(0, 200, 200))
+    player1.addSpriteRenderer("circle", 60, globalP5.color(0,200,200), true, globalP5.color(0, 200, 200))
     
     player1.addScript("playerScript");
 
     myGameEngine.addCamera(player1, globalP5.createVector(0, 200));
 
 
-    lavaFloor = new GameObject(myGameEngine, globalP5.createVector(-25000, 200), "lavaFloor")
+    lavaFloor = new GameObject(myGameEngine, globalP5.createVector(-100000, 200), "lavaFloor")
     lavaFloor.addRigidBody(100000000000, 0.5, 0);
-    lavaFloor.addBoxCollider(globalP5.createVector(50000, 1000), false, true, globalP5.createVector(0, 0), "lava");
+    lavaFloor.addBoxCollider(globalP5.createVector(200000, 1000), false, true, globalP5.createVector(0, 0), "lava");
     lavaFloor.rigidBody.gravityScale = 0;
-    lavaFloor.addSpriteRenderer("rect", globalP5.createVector(50000, 1000), globalP5.createVector(255,20,0), true, globalP5.color(255,80,0))
+    lavaFloor.addSpriteRenderer("rect", globalP5.createVector(200000, 1000), globalP5.color(255,20,0), true, globalP5.color(255,80,0))
     lavaFloor.ignoreCulling = true;
 
-    spawnEnemys(0.01, 0.1, globalP5.createVector(-5000, -1000), globalP5.createVector(5000, -100))
+    spawnEnemys(0.000003, 0.000007, globalP5.createVector(-50000, 50000), globalP5.createVector(-5000, 100))
   }
 
   p.draw = function(){
     myGameEngine.update();
+    console.log(globalP5.frameRate())
 
   };
   
@@ -83,7 +85,7 @@ function spawnEnemy(pos, radius, color, health, name){
   enemy.addRigidBody(1000000, 0.5)
   enemy.addCircleCollider(radius, false, false, globalP5.createVector(0,0), "enemy")
   enemy.rigidBody.gravityScale = 0;
-  enemy.addSpriteRenderer("circle", radius*2, color, true, globalP5.color(color.x, color.y, color.z))
+  enemy.addSpriteRenderer("circle", radius*2, color, true, color)
   enemy.addScript("enemyScript");
   enemy.addTag("enemy")
 
@@ -93,9 +95,11 @@ function spawnEnemy(pos, radius, color, health, name){
   
 
 function spawnEnemys(densityLower, densityUpper, rangeX, rangeY){
-  for (let i = 0; i < Math.round((rangeUpper - rangeLower) * globalP5.random(densityLower, densityUpper)); i++){
+  console.log((Math.abs(rangeX.x) + Math.abs(rangeX.y)) * (Math.abs(rangeY.x) + Math.abs(rangeY.y)) * globalP5.random(densityLower, densityUpper))
+  for (let i = 0; i < (Math.abs(rangeX.x) + Math.abs(rangeX.y)) * (Math.abs(rangeY.x) + Math.abs(rangeY.y)) * globalP5.random(densityLower, densityUpper); i++){
+    console.log("spawn")
     uniqueEnemyId += 1;
-    spawnEnemy(globalP5.createVector(globalP5.random(rangeX.x, rangeY.x), globalP5.random(rangeY.y, rangeY.y)), 25, globalP5.createVector(globalP5.random(180, 255), globalP5.random(0, 70), 0), 5, String(uniqueEnemyId))
+    spawnEnemy(globalP5.createVector(globalP5.random(rangeX.x, rangeX.y), globalP5.random(rangeY.x, rangeY.y)), 25, globalP5.color(255, 0, 0), 5, String(uniqueEnemyId))
   }
 }
 
@@ -985,15 +989,9 @@ class SpriteRenderer {
       
       
     else {
-      
+      globalP5.push()
       if (this.img === "circle"){
-        if (typeof this.spriteColor === typeof "string"){
-          globalP5.fill(this.spriteColor);
-            }
-
-        else if (typeof this.spriteColor === typeof globalP5.createVector(0,0,0)){
-          globalP5.fill(this.spriteColor.x, this.spriteColor.y, this.spriteColor.z);
-        }
+        globalP5.fill(this.spriteColor);
         
         if (this.glow){
           globalP5.drawingContext.shadowBlur = 23;
@@ -1004,13 +1002,7 @@ class SpriteRenderer {
       }
       
       else if (this.img === "rect" || this.img === "rectangle"){
-        if (typeof this.spriteColor === typeof "string"){
-          globalP5.fill(this.spriteColor);
-        }
-        
-        else if (typeof this.spriteColor === typeof globalP5.createVector(0,0,0)){
-          globalP5.fill(this.spriteColor.x, this.spriteColor.y, this.spriteColor.z);
-        }
+        globalP5.fill(this.spriteColor);
         
         if (this.glow){
           globalP5.drawingContext.shadowBlur = 23;
@@ -1018,7 +1010,7 @@ class SpriteRenderer {
         }
         globalP5.rect(0, 0, this.imgSize.x, this.imgSize.y)
       }
-            
+      globalP5.pop()    
     }
     
     
@@ -1056,11 +1048,11 @@ class RigidBody {
     const dragDirection = this.Velocity.copy().normalize().mult(-1);
 
     if (ignoreVertival){
-      this.addForce(globalP5.createVector(dragDirection.x, 0), dragMagnitude.x);
+      this.addForce(globalP5.createVector(dragDirection.x, 0), dragMagnitude);
     }
 
     else if(ignoreHorizontal){
-      this.addForce(globalP5.createVector(0, dragDirection.y), dragMagnitude.y);
+      this.addForce(globalP5.createVector(0, dragDirection.y), dragMagnitude);
     }
 
     else{
@@ -1578,11 +1570,244 @@ class ScriptSystem{
 
 }
 
-
-
-class PhysCheckCirle extends GameObject{
+class Particle{
+   constructor(lifeSpan, color, opacity=1, shouldFade=true, shape="circle", sizeRange=globalP5.createVector(1, 5), hasGravity=false, gravityScale=0.6, hasWind=false, windScale=0.02, windDirection=globalP5.createVector(1,0), glow=false){
   
+    this.velocity = globalP5.createVector(0,0);
+    this.lifeSpan = lifeSpan;
+    this.color = color;
+    this.opacity = opacity;
+    this.shouldFade = shouldFade;
+    this.glow = glow;
+
+    this.shape = shape;
+    this.size = globalP5.random(sizeRange.x, sizeRange.y);
+    this.hasGravity = hasGravity;
+    this.gravityScale = gravityScale;
+    this.hasWind = hasWind;
+    this.windScale = windScale;
+    this.windDirection = windDirection;
+
+    this.timeAlive = 0;
+
+   }
+
+   spawn(position, size=null, vel=null){
+    if (size !== null) this.size = size;
+    if (vel !== null) this.velocity = vel;
+
+    this.position = position;
+
+   }
+
+
+
+   draw(){
+    globalP5.push();
+    globalP5.fill(this.color, this.opacity * 255);
+    globalP5.noStroke();
+    globalP5.translate(this.position.x, this.position.y);
+
+    if (this.glow){
+      globalP5.drawingContext.shadowBlur = 20;
+      globalP5.drawingContext.shadowColor = globalP5.color(this.color);
+    }
+
+    if (this.shape === "circle"){
+      globalP5.circle(0, 0, this.size);
+      
+    }
+
+    else if (this.shape === "rect"){
+      globalP5.rect(0, 0, this.size, this.size);
+    }
+
+    globalP5.pop();
+   }
+
+ 
+
+   physics(){
+      if (this.hasGravity){
+        this.velocity.add(globalP5.createVector(0, this.gravityScale))
+      }
+  
+      if (this.hasWind){
+        this.velocity.add(this.windDirection.copy().mult(this.windScale))
+      }
+  
+      this.position.add(this.velocity);
+    }  
+
+  update(){
+    if (this.shouldFade){
+      this.opacity = globalP5.map(this.timeAlive, 0, this.lifeSpan * 1000, 1, 0);
+    }
+    this.physics();
+    this.draw()
+  }
 }
+
+class ParticleEmitter{
+  constructor(particleSystem, xVelRange, yVelRange, particleName, pos, radius, spawnRate, densityRange, triggerDelay=0, emmiterLifeSpan=1, trigger="OnLoop", followObject=null, followObjectOffset=globalP5.createVector(0,0)){
+    this.particleSystem = particleSystem;
+    this.particleName = particleName;
+
+    this.particleInstances = [];
+
+    this.pos = pos;
+    this.radius = radius;
+    this.spawnRate = spawnRate;
+    this.densityRange = densityRange;
+    this.triggerDelay = triggerDelay;
+    this.emmiterLifeSpan = emmiterLifeSpan;
+    this.trigger = trigger;
+    this.followObject = followObject;
+    this.followObjectOffset = followObjectOffset;
+
+    this.xVelRange = xVelRange;
+    this.yVelRange = yVelRange;
+
+    this.timeAlive = 0;
+    this.timeSinceLastUpdate = 60 * this.spawnRate;
+  }
+
+  spawnParticles(){
+    for (let i = 0; i < Math.round(this.radius / this.particleSystem.particles[this.particleName].sizeRange.y * globalP5.random(this.densityRange.x, this.densityRange.y)); i++){
+      let position = this.pos.copy()
+
+      if(this.followObject !== null){
+        position = this.followObject.Transform.Position.copy().add(this.followObjectOffset);
+      }
+
+      let particle = new Particle(this.particleSystem.particles[this.particleName].lifeSpan, this.particleSystem.particles[this.particleName].color, this.particleSystem.particles[this.particleName].opacity, this.particleSystem.particles[this.particleName].shouldFade, this.particleSystem.particles[this.particleName].shape, this.particleSystem.particles[this.particleName].sizeRange, this.particleSystem.particles[this.particleName].hasGravity, this.particleSystem.particles[this.particleName].gravityScale, this.particleSystem.particles[this.particleName].hasWind, this.particleSystem.particles[this.particleName].windScale, this.particleSystem.particles[this.particleName].windDirection, this.particleSystem.particles[this.particleName].glow);
+      particle.spawn(position.add(globalP5.createVector(globalP5.random(-this.radius, this.radius), globalP5.random(-this.radius, this.radius))), null, globalP5.createVector(globalP5.random(this.xVelRange.x, this.xVelRange.y), globalP5.random(this.yVelRange.x, this.yVelRange.y)));
+      particle.timeAlive = 0;
+      this.particleInstances.push(particle);
+      
+    }
+  }
+
+  update(shouldSpawn=true){
+    
+    this.timeSinceLastUpdate += globalP5.deltaTime;
+    this.timeAlive += globalP5.deltaTime;
+
+
+    if (this.timeSinceLastUpdate >= 60 / this.spawnRate && shouldSpawn){
+      this.timeSinceLastUpdate = 0;
+      this.spawnParticles();
+    }
+
+    for(let i = this.particleInstances.length - 1; i >= 0; i--){
+      if(this.particleInstances[i].timeAlive >= this.particleInstances[i].lifeSpan * 1000){
+        this.particleInstances.splice(i, 1);
+       
+      }
+
+      else{
+
+        this.particleInstances[i].update();
+        this.particleInstances[i].timeAlive += globalP5.deltaTime;
+
+
+      }
+    }
+
+    
+
+    
+  }
+
+  
+
+
+}
+
+class ParticleSystem{
+  constructor(){
+    this.particles = {};
+    this.ParticleEmitters = {};
+    this.emitterInstances = [];
+  }
+
+  createNewParticle({
+    name,
+    lifeSpan,
+    color,
+    opacity = 1,
+    shouldFade = true,
+    shape = "circle",
+    sizeRange = globalP5.createVector(1, 5),
+    hasGravity = false,
+    gravityScale = 0.6,
+    hasWind = false,
+    windScale = 0.02,
+    windDirection = globalP5.createVector(1, 0),
+    glow = false
+  }) {
+    this.particles[name] = { lifeSpan, color, opacity, shouldFade, shape, sizeRange, hasGravity, gravityScale, hasWind, windScale, windDirection, glow};
+  }
+  
+  createNewParticleEmitter({
+    name,
+    particleName,
+    radius,
+    spawnRate,
+    densityRange,
+    triggerDelay = 0,
+    emitterLifeSpan = 1,
+    trigger = "OnLoop",
+    followObject = null,
+    followObjectOffset = globalP5.createVector(0, 0),
+    xVelRange = globalP5.createVector(-1, 1),
+    yVelRange = globalP5.createVector(-1, 1)
+  }) {
+    this.ParticleEmitters[name] = {particleName, radius, spawnRate, densityRange, triggerDelay, emitterLifeSpan, trigger, followObject, xVelRange, yVelRange, followObjectOffset};
+  }
+  
+
+  update(){
+
+    for (let i = this.emitterInstances.length - 1; i >= 0; i--){
+  
+      if(this.emitterInstances[i].timeAlive >= this.emitterInstances[i].emmiterLifeSpan * 1000){
+        if (this.particles[this.emitterInstances[i].particleName].timeAlive >= this.particles[this.emitterInstances[i].particleName].lifeSpan * 1000){
+          this.emitterInstances.splice(i, 1);
+        }
+
+        else{
+          this.emitterInstances[i].update(false);
+        }
+          
+      }
+
+      else{
+        this.emitterInstances[i].update();
+      }
+      
+    
+
+
+    }
+
+
+  }
+
+  spawnEmitter(emitterName, pos=globalP5.createVector(0,0)){
+    pos = pos.copy();
+    let emmiter = new ParticleEmitter(this, this.ParticleEmitters[emitterName].xVelRange, this.ParticleEmitters[emitterName].yVelRange, this.ParticleEmitters[emitterName].particleName, pos, this.ParticleEmitters[emitterName].radius, this.ParticleEmitters[emitterName].spawnRate, this.ParticleEmitters[emitterName].densityRange, this.ParticleEmitters[emitterName].triggerDelay, this.ParticleEmitters[emitterName].emitterLifeSpan, this.ParticleEmitters[emitterName].trigger, this.ParticleEmitters[emitterName].followObject, this.ParticleEmitters[emitterName].followObjectOffset);
+
+    this.emitterInstances.push(emmiter);
+  }
+
+
+
+}
+
+
+
+
 
 class GameEngine {
   constructor(){
@@ -1591,6 +1816,7 @@ class GameEngine {
     this.projectileSystem = new ProjectileSystem(this);
     this.enemySystem = new EnemySystem(this);
     this.scriptSystem = new ScriptSystem(globalP5, this);
+    this.particleSystem = new ParticleSystem();
 
   }
 
@@ -1609,12 +1835,16 @@ class GameEngine {
     }
     
     
+    
+    
+
     this.resizeToFit = resizeToFit;
 
     this.rays = [];
     this.toDebug = [];
 
-    this.cull = false
+    this.cull = false;
+    this.culledObjects = [];
       
     this.gameObjects = {};
     this.playerObjects = [];
@@ -1631,7 +1861,9 @@ class GameEngine {
     globalP5.rectMode(globalP5.CORNER);
 
     globalP5.angleMode(globalP5.DEGREES);
+
     
+
     this.mainCamera = null;
     if (this.resizeToFit){
 
@@ -2183,7 +2415,7 @@ class GameEngine {
     //console.log(culledObjects)
     return culledObjects;
   }
-  
+
 
   addCulling(gameObject, range){
     this.cullingObject = gameObject;
@@ -2192,6 +2424,8 @@ class GameEngine {
 
   }
 
+
+
   update(){
     if (this.resizeToFit){
         this.screenWidth = globalP5.windowWidth;
@@ -2199,6 +2433,7 @@ class GameEngine {
 
     }
 
+    
 
 
     globalP5.background(3);
@@ -2209,12 +2444,17 @@ class GameEngine {
     this.drawBackground(this.backgroundImage, this.backgroundPos, this.backgroundSize)
     globalP5.frameRate(this.FPS)
     
-    let gameObjectValues = Object.values(this.gameObjects)
-
+    let gameObjectValues;
+    
     if (this.cull){
-      let culledObjects = this.cullObjects(this.cullingRange, this.cullingObject.Transform.Position, gameObjectValues)
-      gameObjectValues = culledObjects;
+      gameObjectValues = Object.values(this.gameObjects)
+      this.culledObjects = this.cullObjects(this.cullingRange, this.cullingObject.Transform.Position, gameObjectValues)
+      gameObjectValues = this.culledObjects;
       
+    }
+
+    else{
+      gameObjectValues = Object.values(this.gameObjects)
     }
 
   
@@ -2280,7 +2520,9 @@ class GameEngine {
           globalP5.drawingContext.setLineDash([0,0]);
         }
       }
-    
+
+      //this.testParticle.update()
+      this.particleSystem.update()
     
 
 
@@ -2295,6 +2537,12 @@ class GameEngine {
 
 
 export class MonoBehaviour {
+  constructor(p5Var, gameEngine, gameObject){
+    this.p5 = p5Var;
+    this.gameEngine = gameEngine;
+    this.gameObject = gameObject;
+  }
+
   static cameraToMouseAngle(camera, screenWidth, screenHeight){
     const directionVector = p5.Vector.sub(globalP5.createVector(globalP5.mouseX, globalP5.mouseY), globalP5.createVector(screenWidth / 2 + camera.cameraOffset.x, screenHeight / 2 + camera.cameraOffset.y));
     const directionNormal = p5.Vector.normalize(directionVector)
@@ -2311,8 +2559,17 @@ export class MonoBehaviour {
     return directionNormal
   }
 
-  
-  
+  static GameObject = GameObject;
+  static RigidBody = RigidBody;
+  static BoxCollider = BoxCollider;
+  static CircleCollider = CircleCollider;
+  static Animator = Animator;
+  static Animation = Animation;
+  static ImageSystem = ImageSystem;
+  static SpriteRenderer = SpriteRenderer;
+  static Camera = Camera;
+  static Particle = Particle;
+  static ParticleEmitter = ParticleEmitter;
 }
 
 window.addEventListener('load', (event) => {
