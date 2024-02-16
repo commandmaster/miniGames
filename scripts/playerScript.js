@@ -24,12 +24,12 @@ export default class Player extends MonoBehaviour{
 
       this.gameEngine.particleSystem.createNewParticle({
         name: "bloodParticle",
-        lifeSpan: 0.2,
+        lifeSpan: 0.1,
         color: this.p5.color(255, 0, 0),
         opacity: 1,
         shouldFade: true,
         shape: "circle",
-        sizeRange: this.p5.createVector(10, 10),
+        sizeRange: this.p5.createVector(5, 8),
         hasGravity: false,
         gravityScale: 0.007,
         hasWind: false,
@@ -43,7 +43,7 @@ export default class Player extends MonoBehaviour{
         particleName: "bloodParticle",
         radius: 50,
         spawnRate: 1,
-        densityRange: this.p5.createVector(0.6, 0.7),
+        densityRange: this.p5.createVector(1, 1.3),
         triggerDelay: 0,
         emitterLifeSpan: 0.2,
         trigger: "OnLoop",
@@ -55,37 +55,37 @@ export default class Player extends MonoBehaviour{
       });
 
 
-      this.gameEngine.particleSystem.createNewParticle({
-        name: "trailParticle",
-        lifeSpan: 0.1,
-        color: this.gameObject.spriteRenderer.spriteColor,
-        opacity: 1,
-        shouldFade: true,
-        shape: "circle",
-        sizeRange: this.p5.createVector(5, 10),
-        hasGravity: false,
-        gravityScale: 0.007,
-        hasWind: false,
-        windScale: 0,
-        windDirection: this.p5.createVector(1, 0),
-        glow: true
-      });
+      // this.gameEngine.particleSystem.createNewParticle({
+      //   name: "trailParticle",
+      //   lifeSpan: 0.1,
+      //   color: this.p5.color(255, 255, 255),
+      //   opacity: 0,
+      //   shouldFade: false,
+      //   shape: "circle",
+      //   sizeRange: this.p5.createVector(3, 6),
+      //   hasGravity: false,
+      //   gravityScale: 0.007,
+      //   hasWind: false,
+      //   windScale: 0,
+      //   windDirection: this.p5.createVector(1, 0),
+      //   glow: true
+      // });
       
-      this.gameEngine.particleSystem.createNewParticleEmitter({
-        name: "trailEmitter",
-        particleName: "trailParticle",
-        radius: 10,
-        spawnRate: 5,
-        densityRange: this.p5.createVector(0.7, 0.8),
-        triggerDelay: 0,
-        emitterLifeSpan: 0.1,
-        trigger: "OnLoop",
-        followObject: this.gameObject,
-        followObjectOffset: this.p5.createVector(0, 0),
-        xVelRange: this.p5.createVector(-5,5),
-        yVelRange: this.p5.createVector(-5,5)
+      // this.gameEngine.particleSystem.createNewParticleEmitter({
+      //   name: "trailEmitter",
+      //   particleName: "trailParticle",
+      //   radius: 7,
+      //   spawnRate: 15,
+      //   densityRange: this.p5.createVector(0.7, 0.8),
+      //   triggerDelay: 0.1,
+      //   emitterLifeSpan: 0.1,
+      //   trigger: "OnLoop",
+      //   followObject: this.gameObject,
+      //   followObjectOffset: this.p5.createVector(0, 0),
+      //   xVelRange: this.p5.createVector(-5,5),
+      //   yVelRange: this.p5.createVector(-5,5)
   
-      });
+      // });
       
       
     }
@@ -109,7 +109,11 @@ export default class Player extends MonoBehaviour{
         
       }
 
-      this.gameEngine.particleSystem.spawnEmitter("trailEmitter");
+      if(this.gameObject.rigidBody.Velocity.mag() > 15){
+        //this.gameEngine.particleSystem.spawnEmitter("trailEmitter");
+      }
+
+      
 
 
       if (this.gameEngine.inputSystem.getInputDown('SuperBounce')){

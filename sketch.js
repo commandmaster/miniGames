@@ -9,7 +9,9 @@
 
 let player1;
 let lavaFloor;
-let uniqueEnemyId = 0;
+
+let enemySpawner;
+
 
 
 let sketch;
@@ -29,6 +31,7 @@ let game = function(p){
 
     myGameEngine.scriptSystem.loadScript("playerScript", "./scripts/playerScript.js")
     myGameEngine.scriptSystem.loadScript("enemyScript", "./scripts/enemyScript.js")
+    myGameEngine.scriptSystem.loadScript("enemySpawnerScript", "./scripts/enemySpawnerScript.js")
     
     
   };
@@ -64,12 +67,17 @@ let game = function(p){
     lavaFloor.addSpriteRenderer("rect", globalP5.createVector(200000, 1000), globalP5.color(255,20,0), true, globalP5.color(255,80,0))
     lavaFloor.ignoreCulling = true;
 
-    spawnEnemys(0.000003, 0.000007, globalP5.createVector(-50000, 50000), globalP5.createVector(-5000, 100))
+    enemySpawner = new GameObject(myGameEngine, globalP5.createVector(0,0), "enemySpawner")
+    enemySpawner.ignoreCulling = true;
+    enemySpawner.addScript("enemySpawnerScript")
+
+
+    
   }
 
   p.draw = function(){
     myGameEngine.update();
-    console.log(globalP5.frameRate())
+    
 
   };
   
@@ -77,30 +85,6 @@ let game = function(p){
   
   
 
-}
-
-
-function spawnEnemy(pos, radius, color, health, name){
-  const enemy = new Enemy(myGameEngine, pos, health, name)
-  enemy.addRigidBody(1000000, 0.5)
-  enemy.addCircleCollider(radius, false, false, globalP5.createVector(0,0), "enemy")
-  enemy.rigidBody.gravityScale = 0;
-  enemy.addSpriteRenderer("circle", radius*2, color, true, color)
-  enemy.addScript("enemyScript");
-  enemy.addTag("enemy")
-
-  
-}
-
-  
-
-function spawnEnemys(densityLower, densityUpper, rangeX, rangeY){
-  console.log((Math.abs(rangeX.x) + Math.abs(rangeX.y)) * (Math.abs(rangeY.x) + Math.abs(rangeY.y)) * globalP5.random(densityLower, densityUpper))
-  for (let i = 0; i < (Math.abs(rangeX.x) + Math.abs(rangeX.y)) * (Math.abs(rangeY.x) + Math.abs(rangeY.y)) * globalP5.random(densityLower, densityUpper); i++){
-    console.log("spawn")
-    uniqueEnemyId += 1;
-    spawnEnemy(globalP5.createVector(globalP5.random(rangeX.x, rangeX.y), globalP5.random(rangeY.x, rangeY.y)), 25, globalP5.color(255, 0, 0), 5, String(uniqueEnemyId))
-  }
 }
 
 
@@ -327,12 +311,7 @@ class GameObject {
 }
 
 
-class Enemy extends GameObject{
-  constructor(gameEngine, initPos, health, name){
-    super(gameEngine, initPos, name)
-    this.health = health;
-  }
-}
+
 
 
 
@@ -1693,10 +1672,13 @@ class ParticleEmitter{
     this.timeSinceLastUpdate += globalP5.deltaTime;
     this.timeAlive += globalP5.deltaTime;
 
-
-    if (this.timeSinceLastUpdate >= 60 / this.spawnRate && shouldSpawn){
-      this.timeSinceLastUpdate = 0;
-      this.spawnParticles();
+    if (this.timeAlive >= this.triggerDelay * 1000){
+      if (this.timeSinceLastUpdate >= 60 / this.spawnRate && shouldSpawn){
+        this.timeSinceLastUpdate = 0;
+        this.spawnParticles();
+      }
+  
+      
     }
 
     for(let i = this.particleInstances.length - 1; i >= 0; i--){
@@ -1713,6 +1695,7 @@ class ParticleEmitter{
 
       }
     }
+    
 
     
 
@@ -1771,7 +1754,7 @@ class ParticleSystem{
 
     for (let i = this.emitterInstances.length - 1; i >= 0; i--){
   
-      if(this.emitterInstances[i].timeAlive >= this.emitterInstances[i].emmiterLifeSpan * 1000){
+      if(this.emitterInstances[i].timeAlive - this.emitterInstances[i].triggerDelay * 1000 >= this.emitterInstances[i].emmiterLifeSpan * 1000){
         if (this.particles[this.emitterInstances[i].particleName].timeAlive >= this.particles[this.emitterInstances[i].particleName].lifeSpan * 1000){
           this.emitterInstances.splice(i, 1);
         }
@@ -2570,6 +2553,7 @@ export class MonoBehaviour {
   static Camera = Camera;
   static Particle = Particle;
   static ParticleEmitter = ParticleEmitter;
+  
 }
 
 window.addEventListener('load', (event) => {
