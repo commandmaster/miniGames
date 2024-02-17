@@ -10,6 +10,8 @@ export default class Player extends MonoBehaviour{
       this.chargeStartPos = this.p5.createVector(0, 0);
       this.charge = 0;
 
+      this.shots = 1;
+
       this.gameEngine.inputSystem.addKeyboardInput('SuperBounce', 'space', 'bool')
       this.bounceStarted = false;
       this.bounceFrameRange = 20;
@@ -17,6 +19,7 @@ export default class Player extends MonoBehaviour{
       this.hitTimeout = 0;
       this.afterBounce = false;
       this.bounceHit = false;
+      this.timeHeldDown = 0;
 
 
       this.gameEngine.addCulling(this.gameObject, 2000)
@@ -91,21 +94,52 @@ export default class Player extends MonoBehaviour{
     }
 
     Update(){
-      if (this.p5.mouseIsPressed === true && this.p5.mouseButton === this.p5.LEFT && this.p5.mouseButton !== this.p5.RIGHT) {
+
+      for (const collider of this.gameObject.colliders[0].collidingWith){
+        if (collider.gameObject.hasTag("enemy")){
+            this.shots = 1;
+        }
+
+        if (collider.gameObject.hasTag("lava")){
+          if (!this.gameOver){
+            this.gameOver = true;
+            this.gameEngine.broadCastEvent("game over", "")
+          }
+         
+        }
+      }
+
+      
+
+      if (this.p5.mouseIsPressed === true && this.p5.mouseButton === this.p5.LEFT && this.p5.mouseButton !== this.p5.RIGHT && this.shots > 0 && this.timeHeldDown < 2000) {
         this.drawChargeUp(50);
         this.gameObject.rigidBody.applyDrag(0.05);
+        this.timeHeldDown += this.p5.deltaTime;
+        
+        
       }
 
       else if (this.p5.mouseIsPressed === true && this.p5.mouseButton === this.p5.RIGHT){
         this.charge = 0;
         this.gameObject.rigidBody.applyDrag(0.18, true);
+        
       }
 
       else{
-        if (this.charge > 0) {
-          this.shoot(this.charge * 0.1);
+
+        if (this.charge > 0 ) {
+          if (this.timeHeldDown < 2000){
+            this.shoot(this.charge * 0.1);
+          }
+
           this.charge = 0;
+          this.shots = 0;
+          this.timeHeldDown = 0;
         }
+
+
+
+        
         
       }
 
@@ -142,7 +176,7 @@ export default class Player extends MonoBehaviour{
           this.bounceFrameCounter = 0;
           this.bounceHit = false;
 
-          console.log(this.bounceHit)
+          
         }
 
       }
@@ -176,11 +210,17 @@ export default class Player extends MonoBehaviour{
     drawChargeUp(startOffset){
       const dir = MonoBehaviour.cameraToMouseDirection(this.gameEngine.mainCamera, this.gameEngine.screenWidth, this.gameEngine.screenHeight)
 
+      let colorR = this.p5.map(this.timeHeldDown, 0, 2000, 0, 255); 
+      let colorG = this.p5.map(this.timeHeldDown, 0, 2000, 255, 0); 
+      let colorB = 0; 
+      let strokeW = this.p5.map(this.timeHeldDown, 0, 2000, 4, 1); 
+
       this.p5.push();
-      this.p5.drawingContext.shadowBlur = 10;
-      this.p5.drawingContext.shadowColor = this.p5.color(255);
-      this.p5.strokeWeight(2);
-      this.p5.stroke(255);
+      this.p5.drawingContext.shadowBlur = 20;
+      
+      this.p5.drawingContext.shadowColor = this.p5.color(255, 0, 0);
+      this.p5.strokeWeight(strokeW);
+      this.p5.stroke(this.p5.color(colorR, colorG, colorB));
       this.p5.line(this.gameEngine.mainCamera.position.x + startOffset * dir.x, this.gameEngine.mainCamera.position.y + startOffset * dir.y, this.p5.mouseX, this.p5.mouseY);
       this.charge = this.p5.dist(this.gameEngine.mainCamera.position.x + startOffset * dir.x, this.gameEngine.mainCamera.position.y + startOffset * dir.y, this.p5.mouseX, this.p5.mouseY);
       this.charge = this.p5.min(this.charge, 500);
@@ -188,6 +228,7 @@ export default class Player extends MonoBehaviour{
     }
 
     shoot(speed){
+      this.shots--;
       const dir = MonoBehaviour.cameraToMouseDirection(this.gameEngine.mainCamera, this.gameEngine.screenWidth, this.gameEngine.screenHeight)
       this.gameObject.rigidBody.addForce(dir, speed);
     }

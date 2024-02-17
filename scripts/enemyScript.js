@@ -8,16 +8,16 @@ export default class Enemy{
     }
 
     Start(){
-    
-      
+
     
     }
 
     Update(){
         let wasHit = false;
 
+
         for (const collider of this.gameObject.colliders[0].collidingWith){
-            if (collider.gameObject.hasTag("Player")){
+            if (collider.gameObject.hasTag("Player") || collider.gameObject.hasTag("lava")){
                 wasHit = true;
             }
         }

@@ -7,70 +7,42 @@
 // - describe what you did to take this project "above and beyond"
 
 
-let player1;
-let lavaFloor;
-
-let enemySpawner;
-
-
-
 let sketch;
 let globalP5;
-let imageSystem;
+let preloadDone = false;
+
+function waitForCondition(condition) {
+  return new Promise((resolve) => {
+    const intervalId = setInterval(() => {
+      if (condition()) {
+        clearInterval(intervalId);
+        resolve();
+      }
+    }, 100);
+  });
+}
+
+
 let myGameEngine;
 let game = function(p){
   globalP5 = p;
 
-  p.preload = function(){
+  p.preload = async function(){
     //globalP5.colorMode(globalP5.HSB, 255);
+    myGameEngine = new GameEngine("./scripts/gameState.js");
 
-    myGameEngine = new GameEngine();
-    imageSystem = new ImageSystem();
-    
-    imageSystem.addImage("player1", "mario.png")
-
-    myGameEngine.scriptSystem.loadScript("playerScript", "./scripts/playerScript.js")
-    myGameEngine.scriptSystem.loadScript("enemyScript", "./scripts/enemyScript.js")
-    myGameEngine.scriptSystem.loadScript("enemySpawnerScript", "./scripts/enemySpawnerScript.js")
-    
-    
+    setTimeout(() => {
+      preloadDone = true;
+    }, 1000);
   };
 
   p.setup = function(){
     
-    console.log("setup")
     myGameEngine.Setup(60, true, 800, 800);
-    
-    //myGameEngine.debug = true;
-    myGameEngine.rayDebug = false;
 
-    globalP5.brightness(100);
-    
-    player1 = new GameObject(myGameEngine, globalP5.createVector(0,-200), "player1")
-    player1.addRigidBody(1, 0.8, 0.007)
-    player1.addCircleCollider(30, false, true, globalP5.createVector(0,0), "Player")
-    player1.rigidBody.gravityScale = 0.03
-    player1.addTag("Player")
-    
+   
 
-    player1.addSpriteRenderer("circle", 60, globalP5.color(0,200,200), true, globalP5.color(0, 200, 200))
-    
-    player1.addScript("playerScript");
-
-    myGameEngine.addCamera(player1, globalP5.createVector(0, 200));
-
-
-    lavaFloor = new GameObject(myGameEngine, globalP5.createVector(-100000, 200), "lavaFloor")
-    lavaFloor.addRigidBody(100000000000, 0.5, 0);
-    lavaFloor.addBoxCollider(globalP5.createVector(200000, 1000), false, true, globalP5.createVector(0, 0), "lava");
-    lavaFloor.rigidBody.gravityScale = 0;
-    lavaFloor.addSpriteRenderer("rect", globalP5.createVector(200000, 1000), globalP5.color(255,20,0), true, globalP5.color(255,80,0))
-    lavaFloor.ignoreCulling = true;
-
-    enemySpawner = new GameObject(myGameEngine, globalP5.createVector(0,0), "enemySpawner")
-    enemySpawner.ignoreCulling = true;
-    enemySpawner.addScript("enemySpawnerScript")
-
+  
 
     
   }
@@ -122,10 +94,12 @@ class SaveSystem{
 }
 
 class GameObject {
-  constructor(gameEngine, initPos=globalP5.createVector(0,0), name=null) {
+  constructor(gameEngine, initPos=globalP5.createVector(0,0), name=null, levelName=null) {
     this.Transform = {Position:initPos, Rotation:0, Scale:globalP5.createVector(0,0)};
     this.gameEngine = gameEngine;
     this.Started = false;
+
+
     
     const length = Object.keys(this.gameEngine.gameObjects).length;
     
@@ -165,8 +139,8 @@ class GameObject {
   }
   
   delete() {
-    if(this.gameEngine.gameObjects[this.name].name !== "circleCheckObject"){
-      console.log(this.gameEngine.gameObjects[this.name])
+    for (const level in this.gameEngine.levels){
+      delete this.gameEngine.levels[level].levelObjects[this.name];
     }
     
     
@@ -177,7 +151,8 @@ class GameObject {
   
       
   }
-  
+
+
 
   rotateObject(angleInDegrees){
     globalP5.push();
@@ -205,6 +180,7 @@ class GameObject {
 
     this.scripts[scriptName] = scriptInstance;
   }
+
   
   addSpriteRenderer(img, imgSize=null, spriteColor=null, glow=false, glowColor=null){
     this.spriteRenderer = new SpriteRenderer(this, img, imgSize, spriteColor, glow, glowColor);
@@ -922,7 +898,7 @@ class SpriteRenderer {
     this.imgSize = imgSize;
     this.img = img;
     this.spriteColor = spriteColor;
-    this.imageOffset = globalP5.createVector(0, 0)
+    this.imageOffset = globalP5.createVector(0, 0);
     this.flip = true
     this.glow = glow;
     this.glowColor = glowColor;
@@ -934,7 +910,7 @@ class SpriteRenderer {
     globalP5.push();
     
     if (typeof this.img !== "string"){
-       globalP5.translate(this.gameObject.Transform.Position.x + this.imageOffset.x + this.imgSize.x /2, this.gameObject.Transform.Position.y + this.imageOffset.y + this.imgSize.y /2 )
+        globalP5.translate(this.gameObject.Transform.Position.x + this.imageOffset.x , this.gameObject.Transform.Position.y + this.imageOffset.y)
         }
     
     else{
@@ -944,7 +920,7 @@ class SpriteRenderer {
     
     globalP5.rotate(angleInDegrees)
     globalP5.rectMode(globalP5.CORNER)
-    
+    globalP5.imageMode(globalP5.CENTER)
     
     globalP5.noStroke()
     if (typeof this.img !== "string"){
@@ -953,8 +929,11 @@ class SpriteRenderer {
            globalP5.push()
            globalP5.scale(-1, 1)
            }
-        
+      
+      
        if (this.imgSize !== null){
+        globalP5.scale(-1, 1)
+        
         globalP5.image(this.img, 0 , 0, this.imgSize.x, this.imgSize.y)
         } else{
           globalP5.image(this.img, 0, 0)
@@ -1791,17 +1770,28 @@ class ParticleSystem{
 
 
 
-
 class GameEngine {
-  constructor(){
+  constructor(gameStateScriptPath){
     this.inputSystem = new InputSystem();
     this.weaponSystem = new WeaponSystem(this);
     this.projectileSystem = new ProjectileSystem(this);
     this.enemySystem = new EnemySystem(this);
     this.scriptSystem = new ScriptSystem(globalP5, this);
     this.particleSystem = new ParticleSystem();
+    this.imageSystem = new ImageSystem();
+
+    this.gameStateScript = null;
+
+    this.loadGameStateScript(gameStateScriptPath).then((script) => {
+      this.gameStateScript = script;
+      this.gameStateScript.Preload();
+    });
+      
+    
 
   }
+
+  
 
   Setup(fps=60, resizeToFit=false, screenWidth=400, screenHeight=400){
     this.screenWidth = screenWidth;
@@ -1818,8 +1808,12 @@ class GameEngine {
     }
     
     
+    this.levels = {};
+    this.currentLevel = null;
+    this.currentLevelObjects = null;
+    this.currentLevelScript = null;
     
-    
+    this.gameStateStarted = false;
 
     this.resizeToFit = resizeToFit;
 
@@ -1848,6 +1842,8 @@ class GameEngine {
     
 
     this.mainCamera = null;
+    this.cameras = {};
+
     if (this.resizeToFit){
 
       globalP5.windowResized = function(){
@@ -1860,12 +1856,86 @@ class GameEngine {
       }
     }
 
+    
+    waitForCondition(() => {return this.gameStateScript !== null}).then(() => {
+      console.log('test')
+      this.gameStateScript.Setup();
+    });
+    
+
   }
   
   
-  addCamera(object, cameraOffset=globalP5.createVector(0,0)){
-    this.mainCamera = new Camera(object, this.screenWidth, this.screenHeight, cameraOffset);
+  addCamera(cameraName, object, cameraOffset=globalP5.createVector(0,0)){
+    const camera = new Camera(object, this.screenWidth, this.screenHeight, cameraOffset);
+    this.cameras[cameraName] = camera;
+    this.mainCamera = camera;
   }
+
+  broadCastEvent(eventName, data){
+    const newEvent = new CustomEvent(eventName, { detail: data });
+
+    window.dispatchEvent(newEvent);
+  }
+
+  onEvent(eventName, func){
+    window.addEventListener(eventName, event => {
+        func(event.detail); 
+        
+    });
+  }
+
+
+  createLevel(levelName, levelObjects, cameraName=null){
+    let levelObjectsObject = {}
+    console.log(levelObjects)
+    for (const object of levelObjects){
+      levelObjectsObject[object.name] = object;
+    }
+
+    if (cameraName === null){
+      this.levels[levelName] = {levelObjects:levelObjectsObject, "camera":null};
+    }
+
+    else{
+      this.levels[levelName] = {levelObjects:levelObjectsObject, "camera":this.cameras[cameraName]};
+    }
+    
+
+  }
+
+  loadLevel(levelName, levelManagerScriptName){
+    this.currentLevel = levelName;
+    this.currentLevelObjects = this.levels[levelName].levelObjects;
+    const script = this.scriptSystem.getScript(levelManagerScriptName);
+    const scriptInstance = new script.default(globalP5, this);
+    this.currentLevelScript = scriptInstance
+
+    this.mainCamera = this.levels[levelName].camera;
+    
+    console.log(this.mainCamera)
+    this.currentLevelScript.Start();
+  }
+
+  addObjectToLevel(object){
+    this.currentLevelObjects[object.name] = object;
+  }
+
+
+  async loadGameStateScript(scriptPath) {
+    return new Promise((resolve, reject) => {
+        import(scriptPath)
+            .then(script => {
+                const scriptInstance = new script.default(globalP5, this);
+                console.log(scriptInstance);
+                resolve(scriptInstance);
+            })
+            .catch(error => {
+                reject(error);
+            });
+    });
+}
+
   
   
   
@@ -2427,17 +2497,22 @@ class GameEngine {
     this.drawBackground(this.backgroundImage, this.backgroundPos, this.backgroundSize)
     globalP5.frameRate(this.FPS)
     
+    let gameObjects = this.gameObjects
     let gameObjectValues;
+
+    if (this.currentLevelObjects !== null){
+      gameObjects = this.currentLevelObjects;
+    }
     
     if (this.cull){
-      gameObjectValues = Object.values(this.gameObjects)
+      gameObjectValues = Object.values(gameObjects)
       this.culledObjects = this.cullObjects(this.cullingRange, this.cullingObject.Transform.Position, gameObjectValues)
       gameObjectValues = this.culledObjects;
       
     }
 
     else{
-      gameObjectValues = Object.values(this.gameObjects)
+      gameObjectValues = Object.values(gameObjects)
     }
 
   
@@ -2465,6 +2540,26 @@ class GameEngine {
 
       this.weaponSystem.update();
       this.projectileSystem.update();
+
+      
+
+      if (this.gameStateScript !== null){
+        if (this.gameStateStarted === false){
+          this.gameStateScript.Start();
+          this.gameStateStarted = true;
+        }
+
+        else{
+          this.gameStateScript.Update();
+        }
+      
+        
+      }
+
+      if (this.currentLevelScript !== null){
+        this.currentLevelScript.Update();
+      }
+      
 
       if (this.mainCamera !== null){
         this.mainCamera.update()    
@@ -2504,7 +2599,7 @@ class GameEngine {
         }
       }
 
-      //this.testParticle.update()
+      
       this.particleSystem.update()
     
 
@@ -2558,6 +2653,8 @@ export class MonoBehaviour {
 
 window.addEventListener('load', (event) => {
   console.log('Webpage fully loaded');
+
+
   sketch = new p5(game);
 
   //There is a p5 js instance mode bug that causes setup to try and run before the webpage will load and this prevents that from happening

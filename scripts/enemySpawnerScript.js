@@ -14,28 +14,45 @@ export default class EnemySpawner{
         this.currentChunk = this.p5.createVector(0, 0);
         this.lastChunk = this.p5.createVector(0, 0); 
         this.loadedChunks = {};   
-        
+        this.loadChunks(this.currentChunk);
     }
 
     Update(){
         this.currentChunk = this.getChunk();
-        
+        //console.log(this.currentChunk)
         if (this.currentChunk.x != this.lastChunk.x || this.currentChunk.y != this.lastChunk.y){
             this.lastChunk = this.currentChunk;
-            this.loadChunk(this.currentChunk);
+            this.loadChunks(this.currentChunk);
+
         }
+        
         
     }
 
     getChunk(){
-        return this.p5.createVector(Math.floor(this.playerPosition.x / 5000), Math.floor(this.playerPosition.y / 5000))
+        return {x:Math.floor(this.playerPosition.x / 5000), y:Math.floor(this.playerPosition.y / 5000)}
+    }
+
+    loadChunks(chunk){
+        
+        for (let i = 0; i <= 4; i++){
+            for (let j = 0; j <= 4; j++){
+                this.loadChunk(this.p5.createVector(chunk.x - 2 + i, chunk.y - 2 + j))
+            }
+        }   
     }
 
     loadChunk(chunk){
-        if (this.loadedChunks[chunk.x + " " + chunk.y] == undefined){
-            this.spawnEnemys(0.000003, 0.000003, this.p5.createVector(chunk.x * 5000, chunk.x * 5000 + 5000), this.p5.createVector(chunk.y * 5000, chunk.y * 5000 + 5000))
-            this.loadedChunks[chunk.x + " " + chunk.y] = true;
+        if (this.loadedChunks[chunk] == undefined && chunk.y < 0){
+            this.spawnEnemys(0.000002, 0.0000025, this.p5.createVector(chunk.x * 5000, chunk.x * 5000 + 5000), this.p5.createVector(chunk.y * 5000, chunk.y * 5000 + 5000))
+            this.loadedChunks[chunk] = true;
+
+            
+            
+            
         }
+
+        
     }
 
 
@@ -48,6 +65,7 @@ export default class EnemySpawner{
         enemy.addSpriteRenderer("circle", radius*2, color, true, color)
         enemy.addScript("enemyScript");
         enemy.addTag("enemy")
+        this.gameEngine.addObjectToLevel(enemy)
     
         
     }
@@ -55,11 +73,10 @@ export default class EnemySpawner{
         
     
     spawnEnemys(densityLower, densityUpper, rangeX, rangeY){
-        console.log((Math.abs(rangeX.x) + Math.abs(rangeX.y)) * (Math.abs(rangeY.x) + Math.abs(rangeY.y)) * this.p5.random(densityLower, densityUpper))
-        for (let i = 0; i < (Math.abs(rangeX.x) + Math.abs(rangeX.y)) * (Math.abs(rangeY.x) + Math.abs(rangeY.y)) * this.p5.random(densityLower, densityUpper); i++){
-        console.log("spawn")
-        this.uniqueEnemyId += 1;
-        this.spawnEnemy(this.p5.createVector(this.p5.random(rangeX.x, rangeX.y), this.p5.random(rangeY.x, rangeY.y)), 25, this.p5.color(255, 0, 0), 5, String(this.uniqueEnemyId))
+        
+        for (let i = 0; i < (Math.abs(rangeX.x - rangeX.y)) * (Math.abs(rangeY.x - rangeY.y)) * this.p5.random(densityLower, densityUpper); i++){
+            this.uniqueEnemyId += 1;
+            this.spawnEnemy(this.p5.createVector(this.p5.random(rangeX.x, rangeX.y), this.p5.random(rangeY.x, rangeY.y)), 25, this.p5.color(255, 0, 0), 5, String(this.uniqueEnemyId))
         }
     }
   
