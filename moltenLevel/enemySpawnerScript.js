@@ -9,7 +9,7 @@ export default class EnemySpawner{
 
     Start(){
         this.uniqueEnemyId = 0;
-        //this.spawnEnemys(0.000003, 0.000007, this.p5.createVector(-50000, 50000), this.p5.createVector(-5000, 100))
+        this.runTime = 0;
         this.playerPosition = this.gameEngine.gameObjects["player1"].Transform.Position;
         this.currentChunk = this.p5.createVector(0, 0);
         this.lastChunk = this.p5.createVector(0, 0); 
@@ -18,6 +18,8 @@ export default class EnemySpawner{
     }
 
     Update(){
+        this.runTime += this.p5.deltaTime;
+
         this.currentChunk = this.getChunk();
         //console.log(this.currentChunk)
         if (this.currentChunk.x != this.lastChunk.x || this.currentChunk.y != this.lastChunk.y){
@@ -44,9 +46,10 @@ export default class EnemySpawner{
 
     loadChunk(chunk){
         if (this.loadedChunks[chunk] == undefined && chunk.y < 0){
-            this.spawnEnemys(0.000002, 0.0000025, this.p5.createVector(chunk.x * 5000, chunk.x * 5000 + 5000), this.p5.createVector(chunk.y * 5000, chunk.y * 5000 + 5000))
+            const interval = 12;
+            const decreseDensity = this.runTime / ((1/interval) * 1000000000);
+            this.spawnEnemys(Math.max(0.000002 - decreseDensity, 0.000001), Math.max(0.0000025 - decreseDensity, 0.0000014), this.p5.createVector(chunk.x * 5000, chunk.x * 5000 + 5000), this.p5.createVector(chunk.y * 5000, chunk.y * 5000 + 5000))
             this.loadedChunks[chunk] = true;
-
             
             
             
@@ -65,7 +68,7 @@ export default class EnemySpawner{
         enemy.addSpriteRenderer("circle", radius*2, color, true, color)
         enemy.addScript("enemyScript");
         enemy.addTag("enemy")
-        this.gameEngine.addObjectToLevel(enemy)
+        this.gameEngine.addObjectsToLevel(this.gameEngine.currentLevel, [enemy])
     
         
     }

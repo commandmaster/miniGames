@@ -1,20 +1,20 @@
 import { MonoBehaviour } from "../sketch.js";
 
-export default class ExampleManager{
-    constructor(p5Var, gameEngine, levelName){
+export default class BirdScript{
+    constructor(p5Var, gameEngine, gameObject){
       this.p5 = p5Var;
       this.gameEngine = gameEngine;
-      this.levelName = levelName;
+      this.gameObject = gameObject;
     }
 
     Start(){
-        
+    
       
     
     }
 
     Update(){
-        
+
     }
 
   }

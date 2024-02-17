@@ -5,3 +5,8 @@ html, body {
 canvas {
   display: block;
 }
+
+@font-face {
+  font-family: 'Pixelo';
+  src: url('./fonts/joystixMonospace.otf') format('truetype');
+}

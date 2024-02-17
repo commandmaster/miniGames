@@ -6,7 +6,6 @@ export default class Player extends MonoBehaviour{
     }
 
     Start(){
-
       this.chargeStartPos = this.p5.createVector(0, 0);
       this.charge = 0;
 
@@ -20,9 +19,6 @@ export default class Player extends MonoBehaviour{
       this.afterBounce = false;
       this.bounceHit = false;
       this.timeHeldDown = 0;
-
-
-      this.gameEngine.addCulling(this.gameObject, 2000)
 
 
       this.gameEngine.particleSystem.createNewParticle({
@@ -98,12 +94,15 @@ export default class Player extends MonoBehaviour{
       for (const collider of this.gameObject.colliders[0].collidingWith){
         if (collider.gameObject.hasTag("enemy")){
             this.shots = 1;
+            this.gameEngine.broadCastEvent("increaseScore");
         }
 
         if (collider.gameObject.hasTag("lava")){
           if (!this.gameOver){
             this.gameOver = true;
-            this.gameEngine.broadCastEvent("game over", "")
+            this.gameEngine.loadLevel("endScreen", "moltenGameOverManager");
+            console.log("Game Over");
+            return;
           }
          
         }

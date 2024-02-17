@@ -12,7 +12,8 @@ export default class LavaFloor{
       
         this.gameEngine.onEvent("speedIncrease", (data) => {
             this.speed += data.speed;
-            console.log("speed increased")
+            console.log(this.speed)
+
         });
     }
 

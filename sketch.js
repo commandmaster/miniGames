@@ -29,7 +29,7 @@ let game = function(p){
 
   p.preload = async function(){
     //globalP5.colorMode(globalP5.HSB, 255);
-    myGameEngine = new GameEngine("./scripts/gameState.js");
+    myGameEngine = new GameEngine("./gameState.js");
 
     setTimeout(() => {
       preloadDone = true;
@@ -139,15 +139,11 @@ class GameObject {
   }
   
   delete() {
-    for (const level in this.gameEngine.levels){
-      delete this.gameEngine.levels[level].levelObjects[this.name];
-    }
     
-    
+
     this.scripts = {};
     delete this.gameEngine.gameObjects[this.name];
-
-    //console.log(Object.values(this.gameEngine.gameObjects).length)
+    delete this.gameEngine.currentLevelObjects[this.name];
   
       
   }
@@ -1808,7 +1804,6 @@ class GameEngine {
     }
     
     
-    this.levels = {};
     this.currentLevel = null;
     this.currentLevelObjects = null;
     this.currentLevelScript = null;
@@ -1886,39 +1881,52 @@ class GameEngine {
   }
 
 
-  createLevel(levelName, levelObjects, cameraName=null){
-    let levelObjectsObject = {}
-    console.log(levelObjects)
-    for (const object of levelObjects){
-      levelObjectsObject[object.name] = object;
-    }
-
-    if (cameraName === null){
-      this.levels[levelName] = {levelObjects:levelObjectsObject, "camera":null};
-    }
-
-    else{
-      this.levels[levelName] = {levelObjects:levelObjectsObject, "camera":this.cameras[cameraName]};
-    }
-    
-
-  }
-
   loadLevel(levelName, levelManagerScriptName){
-    this.currentLevel = levelName;
-    this.currentLevelObjects = this.levels[levelName].levelObjects;
-    const script = this.scriptSystem.getScript(levelManagerScriptName);
-    const scriptInstance = new script.default(globalP5, this);
-    this.currentLevelScript = scriptInstance
+    this.backgroundImage = null;
+    this.backgroundSize = null;
+    this.backgroundPos = null;
 
-    this.mainCamera = this.levels[levelName].camera;
+    if (this.currentLevelScript !== null){
+      try{
+        this.currentLevelScript.End();
+      }
+      catch (e){
+        console.log(e);
+      }
+      
+    }
+
+    this.currentLevel = levelName;
+    this.currentLevelObjects = {};
+    this.cull = false;
+
+    const script = this.scriptSystem.getScript(levelManagerScriptName);
+    const scriptInstance = new script.default(globalP5, this, levelName);
+    this.currentLevelScript = scriptInstance;
     
-    console.log(this.mainCamera)
     this.currentLevelScript.Start();
   }
 
-  addObjectToLevel(object){
-    this.currentLevelObjects[object.name] = object;
+  addObjectsToLevel(levelName, objects){
+    for (const object of objects){
+      if (this.currentLevel = levelName){
+        this.currentLevelObjects[object.name] = object;
+      }
+    }
+    
+  }
+
+  addCameraToLevel(levelName, cameraName){
+    if (cameraName === null){
+      this.mainCamera = null;
+    }
+
+    else{
+      if (this.currentLevel = levelName){
+        this.mainCamera = this.cameras[cameraName];
+      }
+    }
+    
   }
 
 
@@ -2404,17 +2412,21 @@ class GameEngine {
   
   
   drawBackground(img=null, pos=globalP5.createVector(0,0), size=null){
-    if (img !== null && size !== null){
+    if (img !== null && size === null){
       globalP5.image(img, pos.x, pos.y)
         }
-    else if (img !== null){
+    else if (img !== null && size !== null){
       globalP5.image(img, pos.x, pos.y, size.x, size.y)    
              }
     
   }
   
 
-   
+  setBackground(img, pos, size){
+    this.backgroundImage = img;
+    this.backgroundPos = pos;
+    this.backgroundSize = size;
+  }
 
 
 
@@ -2489,7 +2501,7 @@ class GameEngine {
     
 
 
-    globalP5.background(3);
+    globalP5.background(0);
     
     this.rays = []
     this.toDebug = []
@@ -2563,7 +2575,7 @@ class GameEngine {
 
       if (this.mainCamera !== null){
         this.mainCamera.update()    
-          }
+      }
       
       for (const name in gameObjectValues) {
         if (gameObjectValues.hasOwnProperty(name)) {
