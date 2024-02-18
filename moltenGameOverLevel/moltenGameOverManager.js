@@ -88,7 +88,6 @@ export default class MoltenGameOverManager{
         this.currentScoreTxt.position(this.gameEngine.screenWidth/2 - this.currentScoreTxt.size().width/2, 600);
         
         
-        
     }
 
     Update(){

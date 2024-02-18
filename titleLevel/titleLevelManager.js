@@ -24,6 +24,10 @@ export default class TitleLevelManager{
         flappyBirdTitle.addSpriteRenderer(this.gameEngine.imageSystem.getImage("flappyBirdLogo"), this.p5.createVector(400, 400));
         flappyBirdTitle.ignoreCulling = true;
 
+        let snakeGameTitle = new MonoBehaviour.GameObject(this.gameEngine, this.p5.createVector(200, 1000), "SnakeGameTitle");
+        snakeGameTitle.addSpriteRenderer(this.gameEngine.imageSystem.getImage("snakeGameLogo"), this.p5.createVector(400, 400));
+        snakeGameTitle.ignoreCulling = true;
+
         this.moltenBtn = this.p5.createButton("")
         this.moltenBtn.position(0, 200);
         this.moltenBtn.size(400, 400);
@@ -47,7 +51,18 @@ export default class TitleLevelManager{
 
         });
 
-        this.gameEngine.addObjectsToLevel(this.levelName, [moltenTitle, mainTitle, flappyBirdTitle]);
+        this.snakeGameBtn = this.p5.createButton("")
+        this.snakeGameBtn.position(0, 800);
+        this.snakeGameBtn.size(400, 400);
+        this.snakeGameBtn.style("opacity", "0");
+        this.snakeGameBtn.mousePressed(() => {
+            setTimeout(() => {
+                this.gameEngine.loadLevel("snakeGame", "snakeGameLevelManager");
+            }, 250);
+
+        });
+
+        this.gameEngine.addObjectsToLevel(this.levelName, [moltenTitle, mainTitle, flappyBirdTitle, snakeGameTitle]);
         this.gameEngine.addCameraToLevel(this.levelName, null);
 
         
@@ -60,6 +75,7 @@ export default class TitleLevelManager{
     End(){
         this.moltenBtn.remove();
         this.flappyBtn.remove();
+        this.snakeGameBtn.remove();
     }
 
   }

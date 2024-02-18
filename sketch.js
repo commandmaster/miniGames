@@ -785,12 +785,23 @@ class InputSystem{
 
   addKeyboardInput(inputName, inputKey, inputType="bool"){
     if (typeof inputKey === 'string'){
-      this.inputs[inputName] = {"inputFormat":"key", "inputKey": this.keycodes[inputKey], "inputType": inputType};
+      this.inputs[inputName] = {"inputFormat":"key", "inputKey": [this.keycodes[inputKey]], "inputType": inputType, "alreadyPressed": false};
 
     } else{
-      this.inputs[inputName] = {"inputFormat":"key", "inputKey": inputKey, "inputType": inputType, "alreadyPressed": false};
+      this.inputs[inputName] = {"inputFormat":"key", "inputKey": [inputKey], "inputType": inputType, "alreadyPressed": false};
     }
      
+  }
+
+  addBindToKeyboardInput(inputName, inputKey){
+    if (typeof inputKey === 'string'){
+      this.inputs[inputName].inputKey.push(this.keycodes[inputKey]);
+    }
+
+    else{
+      this.inputs[inputName].inputKey.push(inputKey);
+    }
+    
   }
   
   
@@ -798,16 +809,15 @@ class InputSystem{
     if (globalP5.keyIsPressed ){
       
       if (this.inputs.hasOwnProperty(inputName) && this.inputs[inputName].inputFormat === "key") {
-        
-            const keycode = this.inputs[inputName].inputKey;
+        for (const keycode of this.inputs[inputName].inputKey){
             if (globalP5.keyIsDown(keycode)){
                 
                 return true;
 
                 
                 }
- 
         }
+      }
       
     }
     
@@ -825,21 +835,40 @@ class InputSystem{
   
   
   getInputDown(inputName){
-    
+      let oneDown = false;
+      let alreadyPressedKey;
       if (this.inputs.hasOwnProperty(inputName)) {
-            const keycode = this.inputs[inputName].inputKey;
-            if (globalP5.keyIsDown(keycode) ){
-              if (this.inputs[inputName].alreadyPressed === false){
-                this.inputs[inputName].alreadyPressed = true;
-                return true; 
-                  }
+        alreadyPressedKey = this.inputs[inputName].alreadyPressed;
+        for (const keycode of this.inputs[inputName].inputKey){
+            if (globalP5.keyIsDown(keycode)){
+              oneDown = true;
+              this.inputs[inputName].alreadyPressed = true;
+              
                 
-                } else {this.inputs[inputName].alreadyPressed = false;}
- 
+            } 
+
+
         }
+
+        
+
+        
+      }
+
+      if (oneDown){
+        this.inputs[inputName].alreadyPressed = true;
+      }
+
+      else{
+        this.inputs[inputName].alreadyPressed = false;
+      }
+      
+      if (!alreadyPressedKey && oneDown){
+        return true;
+      }
+
       
     
-    return false;
     
   }
   
@@ -1259,12 +1288,13 @@ class Animator {
     this.shapeAnimations = {};
     this.currentAnimation = null;
     this.finishCurrentAnim = false;
-    this.transiton = false;
+    this.inTransition = false;
     this.currentFrame = 0;
     this.flip = false;
     this.flipVertical = false;
     this.frameTime = 0;
-    
+    this.loopCount = 0;
+
     this.animationOffset = globalP5.createVector(0,0)
   }
   
@@ -1275,38 +1305,57 @@ class Animator {
 
   
   transition(animToShow, shouldFinish=false){
-    this.transiton = true;
-    if (shouldFinish){
-        this.finishCurrentAnim = true;
-        this.nextAnimation = this.animations[animToShow]
-        }
+    this.inTransition = true;
+    this.finishCurrentAnim = shouldFinish;
     
+    if (this.currentAnimation === null){
+      this.currentAnimation = this.animations[animToShow]
+      this.nextAnimation = this.animations[animToShow]
+    }
+
     else{
       this.nextAnimation = this.animations[animToShow]
     }
+    
+   
+    
     
   }
   
   update(){
     this.frameTime += globalP5.deltaTime / 1000
     
-    if (this.transiton){
-      if (this.finishCurrentAnim){
-        if (this.currentAnimation.frames.indexOf(this.currentAnimation.frames[this.currentFrame]) >= this.currentAnimation.frames.length){
-            this.currentAnimation = this.nextAnimation
-            this.transiton = false;
-            }
-        } 
-      else{
+    if (this.inTransition){
+      if (this.currentAnimation === null){
         this.currentAnimation = this.nextAnimation
-        this.transiton = false;
-          }
+        this.inTransition = false;
+        this.currentFrame = 0;
+        this.loopCount = 0;
+      }
+
+      else if (this.finishCurrentAnim){
+        if (this.currentFrame >= this.currentAnimation.frames.length - 1){
+            this.currentAnimation = this.nextAnimation
+            this.inTransition = false;
+            this.currentFrame = 0;
+            this.loopCount = 0;
+            
+        }
+      } 
+      else{
+        
+        this.currentAnimation = this.nextAnimation
+        this.inTransition = false;
+        this.currentFrame = 0;
+        this.loopCount = 0;
+      }
     }
     
     if (this.currentAnimation !== null) {
     
     const frameInfo = this.currentAnimation.frames[this.currentFrame];
     globalP5.push();
+    globalP5.imageMode(globalP5.CORNER)
       
     this.animationOffset = this.currentAnimation.animationOffset;
       
@@ -1355,6 +1404,7 @@ class Animator {
       this.currentFrame += 1;
     }
     else{
+      this.loopCount += 1;
       this.currentFrame = 0;
     }  
         }
@@ -1827,7 +1877,8 @@ class GameEngine {
       
     this.backgroundImage = null;
     this.backgroundSize = null;
-    this.backgroundPos = null;
+    this.backgroundScrollSpeed = 0;
+    this.currentBackgroundScroll = 0;
     
     globalP5.imageMode(globalP5.CENTER);
     globalP5.rectMode(globalP5.CORNER);
@@ -1884,7 +1935,7 @@ class GameEngine {
   loadLevel(levelName, levelManagerScriptName){
     this.backgroundImage = null;
     this.backgroundSize = null;
-    this.backgroundPos = null;
+  
 
     if (this.currentLevelScript !== null){
       try{
@@ -2411,20 +2462,27 @@ class GameEngine {
   
   
   
-  drawBackground(img=null, pos=globalP5.createVector(0,0), size=null){
-    if (img !== null && size === null){
-      globalP5.image(img, pos.x, pos.y)
-        }
-    else if (img !== null && size !== null){
-      globalP5.image(img, pos.x, pos.y, size.x, size.y)    
-             }
+  drawBackground(img=null,  size=null){
+    globalP5.push()
+    this.currentBackgroundScroll += this.backgroundScrollSpeed;
+    globalP5.translate(this.screenWidth / 2 + this.currentBackgroundScroll % this.screenWidth, this.screenHeight / 2);
     
+    if (img !== null && size === null){
+      globalP5.image(img, 0, 0, this.screenWidth, this.screenHeight)
+      globalP5.image(img, 0 + this.screenWidth, 0, this.screenWidth, this.screenHeight)
+    }
+
+    else if (img !== null && size !== null){
+      globalP5.image(img, 0, 0, size.x, size.y)   
+      globalP5.image(img, 0 + this.screenWidth, 0, this.screenWidth, this.screenHeight) 
+    }
+
+    globalP5.pop()
   }
   
 
-  setBackground(img, pos, size){
+  setBackground(img, size){
     this.backgroundImage = img;
-    this.backgroundPos = pos;
     this.backgroundSize = size;
   }
 
@@ -2660,6 +2718,9 @@ export class MonoBehaviour {
   static Camera = Camera;
   static Particle = Particle;
   static ParticleEmitter = ParticleEmitter;
+
+
+  static waitForCondition = waitForCondition;
   
 }
 

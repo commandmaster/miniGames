@@ -19,17 +19,32 @@ export default class GameState{
         this.gameEngine.scriptSystem.loadScript("flappyBirdLevelManager", "./flappyBirdLevel/flappyBirdLevelManager.js")
         this.gameEngine.scriptSystem.loadScript("birdScript", "./flappyBirdLevel/birdScript.js")
         this.gameEngine.scriptSystem.loadScript("pipeScript", "./flappyBirdLevel/pipeScript.js")
+        this.gameEngine.scriptSystem.loadScript("scoreZoneScript", "./flappyBirdLevel/scoreZoneScript.js")
+        this.gameEngine.scriptSystem.loadScript("groundZoneScript", "./flappyBirdLevel/groundScript.js")
+        this.gameEngine.scriptSystem.loadScript("snakeGameLevelManager", "./snakeLevel/snakeGameLevelManager.js")
+        this.gameEngine.scriptSystem.loadScript("snakePieceScript", "./snakeLevel/snakePieceScript.js")
         
 
         this.gameEngine.imageSystem.addImage("MoltenLogo", "./images/MoltenPursuit.png");
         this.gameEngine.imageSystem.addImage("mainTitle", "./images/mainGameTitle.png");
         this.gameEngine.imageSystem.addImage("moltenEndScreen", "./images/endScreenMolten.png");
         this.gameEngine.imageSystem.addImage("flappyBirdLogo", "./images/flappyBirdLogo.png");
-        this.gameEngine.imageSystem.addImage("flappyBirdBackground", "./images/flappyBackgroundV2.png");
+        this.gameEngine.imageSystem.addImage("flappyBirdBackground", "./images/flappyBackgroundV3.png");
+        this.gameEngine.imageSystem.addImage("upperPipe", "./images/upperPipe.png");
+        this.gameEngine.imageSystem.addImage("lowerPipe", "./images/lowerPipe.png");
+        this.gameEngine.imageSystem.addImage("flappyGameOver", "./images/flappyGameOver.png");
+        this.gameEngine.imageSystem.addImage("snakeGameLogo", "./images/snakeGameLogo.png");
+
+        this.gameEngine.imageSystem.addImage("birdIdle", "./images/flappyBirdIdleSheet.png");
+        this.gameEngine.imageSystem.addImage("birdFlap", "./images/flappyJumpSheet.png");
+
+
     }
 
     Setup(){
         // Load Title Screen
+        // this.gameEngine.debug = true;
+        // this.gameEngine.rayDebug = false;
         this.gameEngine.loadLevel("titleScreen", "titleLevelManager");
         
 
