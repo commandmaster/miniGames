@@ -16,7 +16,7 @@ export default class SnakeGameLevelManager{
       this.endPos = this.p5.createVector(this.gameEngine.screenWidth, this.gameEngine.screenHeight);
       this.pieces = [];
       this.direction = this.p5.createVector(1, 0);
-
+      
       this.timeSinceLastMove = 0;
 
       this.gameEngine.inputSystem.addKeyboardInput('snakeUp', 'w', 'bool')
@@ -52,63 +52,61 @@ export default class SnakeGameLevelManager{
         indexX++; 
       }
 
-
-      this.pieces.push({x: 20, y: 3});
-      this.pieces.push({x: 19, y: 3});
-      this.pieces.push({x: 18, y: 3});
-      this.pieces.push({x: 17, y: 3});
-      this.pieces.push({x: 16, y: 3});
-      this.pieces.push({x: 15, y: 3});
-      this.pieces.push({x: 14, y: 3});
-
+      this.score = 3;
+      this.pieces.push({x: 20, y: 3, direction: this.p5.createVector(1, 0)});
+      this.pieces.push({x: 19, y: 3, direction: this.p5.createVector(1, 0)});
+      this.pieces.push({x: 18, y: 3, direction: this.p5.createVector(1, 0)});
       
+
+      this.spawnApple();
+      this.spawnApple();
+      this.spawnApple();
+      
+
+      this.scoreTxt = this.p5.createButton("Score: " + this.score);
+      this.scoreTxt.position(25, 25);
+      this.scoreTxt.style("font-size", "24px");
+      this.scoreTxt.style("font-family", "Pixelo, Arial");
+      this.scoreTxt.style("background-color", "transparent");
+      this.scoreTxt.style("border", "none");
+      this.scoreTxt.style("color", "#00ff00");
+      this.scoreTxt.style("outline", "none");
+      this.scoreTxt.style("z-index", "1000");
     }
 
     Update(){
       this.timeSinceLastMove += this.p5.deltaTime;
 
       if (this.gameEngine.inputSystem.getInputDown("snakeUp")){
-        console.log("up")
-        this.direction = this.p5.createVector(0, -1);
-        
+        if (this.pieces[0].direction.y !== 1){
+          this.direction = this.p5.createVector(0, -1);
+        }
 
       }
 
       if (this.gameEngine.inputSystem.getInputDown("snakeDown")){
-          console.log("down")
-          this.direction = this.p5.createVector(0, 1);
-          
+          if (this.pieces[0].direction.y !== -1){
+            this.direction = this.p5.createVector(0, 1);
+          }
+
       }
 
       if (this.gameEngine.inputSystem.getInputDown("snakeLeft")){
-          console.log("left")
-          this.direction = this.p5.createVector(-1, 0);
-          
+          if (this.pieces[0].direction.x !== 1){
+            this.direction = this.p5.createVector(-1, 0);
+          }
+
       }
 
       if (this.gameEngine.inputSystem.getInputDown("snakeRight")){
-          console.log("right")
-          this.direction = this.p5.createVector(1, 0);
-          
-          
+          if (this.pieces[0].direction.x !== -1){
+            this.direction = this.p5.createVector(1, 0);
+          } 
+
       }
 
-      if (this.timeSinceLastMove > 1000){
+      if (this.timeSinceLastMove > 200){
         this.timeSinceLastMove = 0;
-
-        this.grid[this.pieces[this.pieces.length - 1].x][this.pieces[this.pieces.length - 1].y] = 0;
-        
-
-        this.grid[this.pieces[1].x][this.pieces[1].y] = 3;
-
-        this.pieces[0].x += this.direction.x;
-        this.pieces[0].y += this.direction.y;
-
-        this.grid[this.pieces[0].x][this.pieces[0].y] = 3;
-        
-
-
-
         this.updatePieces();
       }
         this.drawGrid();
@@ -116,38 +114,94 @@ export default class SnakeGameLevelManager{
     }
 
     updatePieces(){
-    
-      for (let i = this.pieces.length - 1; i >= 1; i--) {
-        this.pieces[i].x = this.pieces[i - 1].x;
-        this.pieces[i].y = this.pieces[i - 1].y;
+      this.grid[this.pieces[this.pieces.length - 1].x][this.pieces[this.pieces.length - 1].y] = 0;
+      for (let i = this.pieces.length - 1; i >= 0; i--) {
+        if (i > 0){
+          this.pieces[i].x = this.pieces[i - 1].x;
+          this.pieces[i].y = this.pieces[i - 1].y;
+          this.pieces[i].direction = this.pieces[i - 1].direction;
+          this.grid[this.pieces[i].x][this.pieces[i].y] = 3;
+        }
+
+        else if (i === 0){
+          this.pieces[i].x += this.direction.x;
+          this.pieces[i].y += this.direction.y;
+          this.pieces[i].direction = this.direction;
+
+          if (this.grid[this.pieces[i].x][this.pieces[i].y] === 1){
+            console.log("Game Over");
+            return;
+          }
+
+          else if (this.grid[this.pieces[i].x][this.pieces[i].y] === 2){
+            this.score++;
+            this.spawnApple();
+            this.createPiece();
+            this.grid[this.pieces[i].x][this.pieces[i].y] = 3;
+          }
+
+          else if (this.grid[this.pieces[i].x][this.pieces[i].y] === 3){
+            console.log("Game Over");
+            return;
+          }
+
+          else if (this.grid[this.pieces[i].x][this.pieces[i].y] === 0){
+            this.grid[this.pieces[i].x][this.pieces[i].y] = 3;
+          }
+          
+        }
       }
     
-      // Update grid cells after updating all positions
-      for (let i = 1; i < this.pieces.length; i++) {
-        this.grid[this.pieces[i].x][this.pieces[i].y] = 3;
+    }
+
+    createPiece(){
+      this.pieces.push({x:this.pieces[this.pieces.length - 1].x - this.pieces[this.pieces.length - 1].direction.x, y:this.pieces[this.pieces.length - 1].y - this.pieces[this.pieces.length - 1].direction.y, direction: this.pieces[this.pieces.length - 1].direction});
+    }
+
+    spawnApple(){
+      let x = Math.floor(Math.random() * this.grid.length);
+      let y = Math.floor(Math.random() * this.grid[0].length);
+      if (this.grid[x][y] === 0){
+        this.grid[x][y] = 2;
       }
-      
-      
-      
+
+      else{
+        this.spawnApple();
+      }
     }
 
 
     drawGrid(){
+      this.p5.push();
+      this.p5.noStroke();
       for (let i = 0; i < this.grid.length; i++) {
         for (let j = 0; j < this.grid[i].length; j++) {
           if (this.grid[i][j] === 1){
+            this.p5.drawingContext.shadowBlur = 17;
+            this.p5.drawingContext.shadowColor = this.p5.color(255, 255, 255);
             this.p5.fill(255, 255, 255);
             this.p5.rect(i * (this.squareSize + this.spacing), j * (this.squareSize + this.spacing), this.squareSize, this.squareSize);
           }
 
           else if (this.grid[i][j] === 3){
+            this.p5.drawingContext.shadowBlur = 12;
+            this.p5.drawingContext.shadowColor = this.p5.color(0, 255, 0);
             this.p5.fill(0, 255, 0);
+            this.p5.rect(i * (this.squareSize + this.spacing), j * (this.squareSize + this.spacing), this.squareSize, this.squareSize);
+          }
+
+          else if (this.grid[i][j] === 2){
+            this.p5.drawingContext.shadowBlur = 17;
+            this.p5.drawingContext.shadowColor = this.p5.color(255, 0, 0);
+            this.p5.fill(255, 0, 0);
             this.p5.rect(i * (this.squareSize + this.spacing), j * (this.squareSize + this.spacing), this.squareSize, this.squareSize);
           }
         }
       }
 
-      console.log(this.grid);
+      this.p5.pop();
+
+      
     }
   
 
