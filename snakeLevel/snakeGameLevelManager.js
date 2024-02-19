@@ -13,9 +13,12 @@ export default class SnakeGameLevelManager{
       this.squareSize = 25;
       this.spacing = 5;
       this.startingPos = this.p5.createVector(0, 0);
-      this.endPos = this.p5.createVector(this.gameEngine.screenWidth, this.gameEngine.screenHeight);
+      
       this.pieces = [];
       this.direction = this.p5.createVector(1, 0);
+      this.dificulty = 1;
+      
+      this.endPos = this.p5.createVector(Math.min(this.gameEngine.screenWidth, this.gameEngine.screenHeight), Math.min(this.gameEngine.screenWidth, this.gameEngine.screenHeight));
       
       this.timeSinceLastMove = 0;
 
@@ -53,9 +56,9 @@ export default class SnakeGameLevelManager{
       }
 
       this.score = 3;
-      this.pieces.push({x: 20, y: 3, direction: this.p5.createVector(1, 0)});
-      this.pieces.push({x: 19, y: 3, direction: this.p5.createVector(1, 0)});
-      this.pieces.push({x: 18, y: 3, direction: this.p5.createVector(1, 0)});
+      this.pieces.push({x: 3, y: 3, direction: this.p5.createVector(1, 0)});
+      this.pieces.push({x: 2, y: 3, direction: this.p5.createVector(1, 0)});
+      this.pieces.push({x: 1, y: 3, direction: this.p5.createVector(1, 0)});
       
 
       this.spawnApple();
@@ -134,10 +137,15 @@ export default class SnakeGameLevelManager{
           }
 
           else if (this.grid[this.pieces[i].x][this.pieces[i].y] === 2){
-            this.score++;
-            this.spawnApple();
-            this.createPiece();
+            this.score += 4 - this.dificulty;
+            
+              
+              
             this.grid[this.pieces[i].x][this.pieces[i].y] = 3;
+            
+            this.createPiece();
+            this.spawnApple();
+            
           }
 
           else if (this.grid[this.pieces[i].x][this.pieces[i].y] === 3){

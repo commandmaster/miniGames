@@ -22,7 +22,7 @@ export default class GameState{
         this.gameEngine.scriptSystem.loadScript("scoreZoneScript", "./flappyBirdLevel/scoreZoneScript.js")
         this.gameEngine.scriptSystem.loadScript("groundZoneScript", "./flappyBirdLevel/groundScript.js")
         this.gameEngine.scriptSystem.loadScript("snakeGameLevelManager", "./snakeLevel/snakeGameLevelManager.js")
-        this.gameEngine.scriptSystem.loadScript("snakePieceScript", "./snakeLevel/snakePieceScript.js")
+
         
 
         this.gameEngine.imageSystem.addImage("MoltenLogo", "./images/MoltenPursuit.png");
