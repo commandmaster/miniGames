@@ -1890,19 +1890,22 @@ class GameEngine {
     this.mainCamera = null;
     this.cameras = {};
 
-    if (this.resizeToFit){
+    
 
-      globalP5.windowResized = function(){
-        globalP5.resizeCanvas(globalP5.windowWidth, globalP5.windowHeight);
-        this.screenWidth = globalP5.windowWidth;
-        this.screenHeight = globalP5.windowHeight;
+    globalP5.windowResized = function(){
+      if (!this.resizeToFit) return;
+      globalP5.resizeCanvas(globalP5.windowWidth, globalP5.windowHeight);
+      this.screenWidth = globalP5.windowWidth;
+      this.screenHeight = globalP5.windowHeight;
 
-        console.log(this.screenWidth)
-        console.log(this.screenHeight)
-      }
+      console.log(this.screenWidth)
+      console.log(this.screenHeight)
     }
+    
 
     
+
+
     waitForCondition(() => {return this.gameStateScript !== null}).then(() => {
       console.log('test')
       this.gameStateScript.Setup();
@@ -1911,6 +1914,15 @@ class GameEngine {
 
   }
   
+  setCanvasWidth(width){
+    this.screenWidth = width;
+    globalP5.resizeCanvas(this.screenWidth, this.screenHeight);
+  }
+
+  setCanvasHeight(height){
+    this.screenHeight = height;
+    globalP5.resizeCanvas(this.screenWidth, this.screenHeight);
+  }
   
   addCamera(cameraName, object, cameraOffset=globalP5.createVector(0,0)){
     const camera = new Camera(object, this.screenWidth, this.screenHeight, cameraOffset);

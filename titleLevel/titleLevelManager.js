@@ -9,6 +9,8 @@ export default class TitleLevelManager{
 
     Start(){
         // Title Screen setup
+        this.gameEngine.resizeToFit = false;
+        this.gameEngine.setCanvasHeight(1440);
 
         let mainTitle = new MonoBehaviour.GameObject(this.gameEngine, this.p5.createVector(this.gameEngine.screenWidth / 2, 100), "mainTitle");
         mainTitle.addSpriteRenderer(this.gameEngine.imageSystem.getImage("mainTitle"), this.p5.createVector(1000, 300));
@@ -73,6 +75,8 @@ export default class TitleLevelManager{
     }
 
     End(){
+        this.gameEngine.resizeToFit = true;
+        this.gameEngine.setCanvasHeight(this.p5.windowHeight);
         this.moltenBtn.remove();
         this.flappyBtn.remove();
         this.snakeGameBtn.remove();
