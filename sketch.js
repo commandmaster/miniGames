@@ -2562,6 +2562,7 @@ class GameEngine {
 
 
   update(){
+    
     if (this.resizeToFit){
         this.screenWidth = globalP5.windowWidth;
         this.screenHeight = globalP5.windowHeight;
