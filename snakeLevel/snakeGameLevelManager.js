@@ -80,6 +80,8 @@ export default class SnakeGameLevelManager{
     Update(){
       this.timeSinceLastMove += this.p5.deltaTime;
 
+      
+
       if (this.gameEngine.inputSystem.getInputDown("snakeUp")){
         if (this.pieces[0].direction.y !== 1){
           this.direction = this.p5.createVector(0, -1);
