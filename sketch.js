@@ -355,6 +355,10 @@ class GameObject {
 class InputSystem{
   // For the gameEngine class
   
+  /**
+   * Represents a constructor.
+   * @constructor
+   */
   constructor(){
     this.keycodes = {
       'a': 65,
@@ -388,14 +392,23 @@ class InputSystem{
     };
     
     this.inputs = {}
-    
-    
   }
 
+  /**
+   * Adds a mouse input to the inputs object.
+   * @param {string} inputName - The name of the input.
+   * @param {string} mouseButton - The mouse button associated with the input.
+   */
   addMouseInput(inputName, mouseButton){
       this.inputs[inputName] = {"inputFormat":"mouse", "inputKey": mouseButton, "inputType": "bool"};
   }
 
+  /**
+   * Adds a keyboard input to the sketch.
+   * @param {string} inputName - The name of the input.
+   * @param {string | number} inputKey - The key associated with the input.
+   * @param {string} [inputType="bool"] - The type of the input (default is "bool").
+   */
   addKeyboardInput(inputName, inputKey, inputType="bool"){
     if (typeof inputKey === 'string'){
       this.inputs[inputName] = {"inputFormat":"key", "inputKey": [this.keycodes[inputKey]], "inputType": inputType, "alreadyPressed": false};
@@ -406,6 +419,11 @@ class InputSystem{
      
   }
 
+  /**
+   * Adds a keyboard input binding for the specified input name and key.
+   * @param {string} inputName - The name of the input.
+   * @param {string|number} inputKey - The key to bind to the input. Can be either a string representing a key code or a number representing a key code.
+   */
   addBindToKeyboardInput(inputName, inputKey){
     if (typeof inputKey === 'string'){
       this.inputs[inputName].inputKey.push(this.keycodes[inputKey]);
@@ -418,6 +436,11 @@ class InputSystem{
   }
   
   
+  /**
+   * Retrieves the input value for the specified input name.
+   * @param {string} inputName - The name of the input.
+   * @returns {boolean} - True if the input is active, false otherwise.
+   */
   getInput(inputName){
     if (globalP5.keyIsPressed ){
       
@@ -439,14 +462,18 @@ class InputSystem{
         if (globalP5.mouseButton === this.inputs[inputName].inputKey){
           return true;
         }
-    }
-    
-    
+      }
       return false;
-    
-  }}
+    }
+
+  }
   
   
+  /**
+   * Retrieves the status of a specific input key.
+   * @param {string} inputName - The name of the input key.
+   * @returns {boolean} - True if the input key is currently pressed, false otherwise.
+   */
   getInputDown(inputName){
       let oneDown = false;
       let alreadyPressedKey;
@@ -479,10 +506,6 @@ class InputSystem{
       if (!alreadyPressedKey && oneDown){
         return true;
       }
-
-      
-    
-    
   }
   
   
@@ -512,6 +535,9 @@ class Camera {
     this.position = globalP5.createVector(this.objectToFollow.gameEngine.screenWidth/2 + this.cameraOffset.x, this.objectToFollow.gameEngine.screenHeight/2 + this.cameraOffset.y);
   }
 
+  /**
+   * Updates the camera position based on the object to follow.
+   */
   update() {
     this.screenWidth = this.objectToFollow.gameEngine.screenWidth;
     this.screenHeight = this.objectToFollow.gameEngine.screenHeight;
@@ -567,6 +593,9 @@ class SpriteRenderer {
   }
   
   
+  /**
+   * Updates the game object's visual representation based on its properties.
+   */
   update(){ 
     const angleInDegrees = this.gameObject.Transform.Rotation 
     globalP5.push();
@@ -661,6 +690,11 @@ class RigidBody {
     this.maxSpeed = 10000000000;
   }
   
+  /**
+   * Applies a force to the object.
+   * @param {p5.Vector} directionVector - The direction of the force.
+   * @param {number} Magnitude - The magnitude of the force.
+   */
   addForce(directionVector, Magnitude){
     this.acceleration = directionVector.mult(Magnitude).div(this.mass)
     
@@ -670,6 +704,12 @@ class RigidBody {
     
   }
   
+  /**
+   * Applies drag to the object's velocity.
+   * @param {number} drag - The drag coefficient.
+   * @param {boolean} [ignoreVertival=false] - Whether to ignore vertical drag.
+   * @param {boolean} [ignoreHorizontal=false] - Whether to ignore horizontal drag.
+   */
   applyDrag(drag, ignoreVertival=false, ignoreHorizontal=false){
     const dragMagnitude = this.Velocity.copy().mag() * drag;
     const dragDirection = this.Velocity.copy().normalize().mult(-1);
@@ -688,10 +728,16 @@ class RigidBody {
     
   }
   
+  /**
+   * Applies gravity to the object.
+   */
   applyGravity(){
     this.addForce(globalP5.createVector(0, 1), 9.8 * this.mass * this.gravityScale);
   }
   
+  /**
+   * Updates the game object's position based on velocity, gravity, and drag.
+   */
   update() {
    
     
@@ -715,6 +761,7 @@ class TopDownPlayerController{
    * @param {number} deccelerationScale - The scale factor for deceleration.
    * @param {number} maxSpeed - The maximum speed of the object.
    * @param {number} horizontalBias - The horizontal bias of the object (optional).
+   * @deprecated This class is deprecated and will be removed in future versions of the game engine.
    */
   constructor(rigidBody, accelerationScale, deccelerationScale, maxSpeed, horizontalBias=1){
     this.rigidBody = rigidBody;
@@ -732,6 +779,9 @@ class TopDownPlayerController{
     
   }
   
+  /**
+   * Updates the object's movement based on user input.
+   */
   update(){
     
     
@@ -806,6 +856,7 @@ class PlatformerPlayerController{
    * @param {number} maxSpeed - The maximum speed of the object.
    * @param {number} jumpPower - The power of the object's jump.
    * @param {number} airControl - The air control factor of the object. (optional)
+   * @deprecated This class is deprecated and will be removed in future versions of the game engine.
    */
   constructor(rigidBody, accelerationScale, deccelerationScale, maxSpeed, jumpPower, airControl=1){
     this.rigidBody = rigidBody;
@@ -829,6 +880,9 @@ class PlatformerPlayerController{
     this.rigidBody.gameObject.gameEngine.inputSystem.addKeyboardInput('TimeWarp', 'f', 'bool')
   }
   
+  /**
+   * Updates the state of the object.
+   */
   update(){
     
     this.isGrounded = false;
@@ -937,11 +991,12 @@ class Animation{
     this.animationOffset = globalP5.createVector(0,0);
   }
   
+  /**
+   * Generates frame data for the sprite animation.
+   */
   generateFrameData(){
     for (let i = 0; i < this.numOfFrames; i++){
       this.frames.push({"img": this.spriteSheet, "sWidth": this.frameWidth, "sHeight": this.frameHeight, "sx": (i) * this.spriteSheet.width / this.numOfFrames, "sy": 0, "size": this.size})
-      //console.log((i) * this.spriteSheet.width / this.numOfFrames)
-      //console.log(this.frameWidth)
     }
     
   }
@@ -1006,6 +1061,9 @@ class Animator {
     
   }
   
+  /**
+   * Updates the animation frame and handles transitions between animations.
+   */
   update(){
     this.frameTime += globalP5.deltaTime / 1000
     
@@ -1159,6 +1217,9 @@ class BoxCollider {
       
   }
   
+  /**
+   * Displays the collider of an object.
+   */
   showCollider(){
     globalP5.noFill()
     globalP5.strokeWeight(2);
@@ -1183,12 +1244,18 @@ class BoxCollider {
     this.midRight = globalP5.createVector(this.Transform.Position.x + this.colliderSize.x, this.Transform.Position.y + this.colliderSize.y /2);
     this.midTop = globalP5.createVector(this.Transform.Position.x + this.colliderSize.x / 2, this.Transform.Position.y);
     this.midBottom = globalP5.createVector(this.Transform.Position.x + this.colliderSize.x / 2, this.Transform.Position.y + this.colliderSize.y);
-    
-    
   }
 }
 
 class CircleCollider {
+  /**
+   * Creates a new Collider object.
+   * @param {GameObject} gameObject - The game object associated with the collider.
+   * @param {number} colliderRadius - The radius of the collider.
+   * @param {boolean} [isTrigger=false] - Whether the collider is a trigger or not.
+   * @param {boolean} [isContinuous=false] - Whether the collider should continuously check for collisions.
+   * @param {p5.Vector} [colliderOffset=globalP5.createVector(0,0)] - The offset position of the collider relative to the game object's position.
+   */
   constructor(gameObject, colliderRadius, isTrigger=false, isContinuous=false, colliderOffset=globalP5.createVector(0,0)){
     this.colliderType = "circle";
     this.gameObject = gameObject;
@@ -1206,20 +1273,32 @@ class CircleCollider {
     this.Transform.Position = this.gameObject.Transform.Position.copy().add(this.colliderOffset)
   }
   
-   addTag(tag){
+  /**
+   * Adds a tag to the colliderTags array.
+   * @param {string} tag - The tag to be added.
+   */
+  addTag(tag){
     this.colliderTags.push(tag)
   }
   
+  /**
+   * Checks if the object has a specific tag.
+   * @param {string} tag - The tag to check.
+   * @returns {boolean} - True if the object has the tag, false otherwise.
+   */
   hasTag(tag){
     if (this.colliderTags.includes(tag)){
       return true;
     } 
     
     return false;
-      
   }
   
   
+  /**
+   * Displays the collider of the game object.
+   * Used for debugging purposes.
+   */
   showCollider(){
     globalP5.strokeWeight(2);
     globalP5.stroke(255, 0, 0);
@@ -1229,22 +1308,30 @@ class CircleCollider {
     globalP5.noStroke()
   }
   
+  /**
+   * Updates the object's position based on the collider offset.
+   */
   update(){
     this.Transform.Position = this.gameObject.Transform.Position.copy().add(this.colliderOffset)
-    
-    
-    
   }
 
 }
 
 
 class ImageSystem{
+  /**
+   * Represents a constructor.
+   * @constructor
+   */
   constructor(){
     this.Images = {}
-    
   }
   
+  /**
+   * Adds an image to the Images object.
+   * @param {string} name - The name of the image.
+   * @param {string} imagePath - The path to the image file.
+   */
   addImage(name, imagePath){
     const img = globalP5.loadImage(imagePath)
     this.Images[name] = img
@@ -1252,12 +1339,23 @@ class ImageSystem{
     console.log(this.Images)
   }
   
+  /**
+   * Retrieves an image by its name.
+   * @param {string} name - The name of the image to retrieve.
+   * @returns {any} The image corresponding to the given name.
+   */
   getImage(name){
     return this.Images[name];
   }
 }
 
 class ScriptSystem{
+  /**
+   * Represents a constructor function.
+   * @constructor
+   * @param {p5} p5Var - The p5 instance.
+   * @param {GameEngine} gameEngine - The game engine instance.
+   */
   constructor(p5Var, gameEngine){
     this.Scripts = {};
 
@@ -1265,11 +1363,22 @@ class ScriptSystem{
     this.gameEngine = gameEngine;
   }
   
+  /**
+   * Loads a script dynamically and stores it in the Scripts object.
+   * @param {string} scriptName - The name of the script.
+   * @param {string} scriptPath - The path to the script.
+   * @returns {Promise} - A promise that resolves when the script is loaded.
+   */
   async loadScript(scriptName, scriptPath){
     this.Scripts[scriptName] = await import(scriptPath);
     console.log(this.Scripts[scriptName]);
   }
   
+  /**
+   * Retrieves a script by its name.
+   * @param {string} scriptName - The name of the script to retrieve.
+   * @returns {class} - The script class corresponding to the given name.
+   */
   getScript(scriptName){
     return this.Scripts[scriptName];
   }
@@ -1277,8 +1386,23 @@ class ScriptSystem{
 }
 
 class Particle{
+  /**
+   * Represents a particle object.
+   * @constructor
+   * @param {number} lifeSpan - The lifespan of the particle.
+   * @param {string} color - The color of the particle.
+   * @param {number} [opacity=1] - The opacity of the particle.
+   * @param {boolean} [shouldFade=true] - Whether the particle should fade over time.
+   * @param {string} [shape="circle"] - The shape of the particle.
+   * @param {p5.Vector} [sizeRange=globalP5.createVector(1, 5)] - The range of sizes for the particle.
+   * @param {boolean} [hasGravity=false] - Whether the particle is affected by gravity.
+   * @param {number} [gravityScale=0.6] - The scale of gravity for the particle.
+   * @param {boolean} [hasWind=false] - Whether the particle is affected by wind.
+   * @param {number} [windScale=0.02] - The scale of wind for the particle.
+   * @param {p5.Vector} [windDirection=globalP5.createVector(1,0)] - The direction of the wind for the particle.
+   * @param {boolean} [glow=false] - Whether the particle has a glow effect.
+   */
    constructor(lifeSpan, color, opacity=1, shouldFade=true, shape="circle", sizeRange=globalP5.createVector(1, 5), hasGravity=false, gravityScale=0.6, hasWind=false, windScale=0.02, windDirection=globalP5.createVector(1,0), glow=false){
-  
     this.velocity = globalP5.createVector(0,0);
     this.lifeSpan = lifeSpan;
     this.color = color;
@@ -1295,19 +1419,26 @@ class Particle{
     this.windDirection = windDirection;
 
     this.timeAlive = 0;
-
    }
 
+  /**
+   * Spawns a new object at the specified position.
+   * @param {p5.Vector} position - The position of the object.
+   * @param {p5.Vector} [size=null] - The size of the object.
+   * @param {p5.Vector} [vel=null] - The velocity of the object.
+   */
    spawn(position, size=null, vel=null){
     if (size !== null) this.size = size;
     if (vel !== null) this.velocity = vel;
 
     this.position = position;
-
    }
 
 
 
+  /**
+   * Draws the particle on the p5js canvas.
+   */
    draw(){
     globalP5.push();
     globalP5.fill(this.color, this.opacity * 255);
@@ -1333,18 +1464,27 @@ class Particle{
 
  
 
-   physics(){
-      if (this.hasGravity){
-        this.velocity.add(globalP5.createVector(0, this.gravityScale))
-      }
-  
-      if (this.hasWind){
-        this.velocity.add(this.windDirection.copy().mult(this.windScale))
-      }
-  
-      this.position.add(this.velocity);
-    }  
+  /**
+   * Updates the physics of the object.
+   * If the object has gravity, it applies the gravity force.
+   * If the object has wind, it applies the wind force.
+   * Finally, it updates the position of the object based on its velocity.
+   */
+  physics(){
+    if (this.hasGravity){
+      this.velocity.add(globalP5.createVector(0, this.gravityScale))
+    }
 
+    if (this.hasWind){
+      this.velocity.add(this.windDirection.copy().mult(this.windScale))
+    }
+
+    this.position.add(this.velocity);
+  }  
+
+  /**
+   * Updates the object's properties and behavior.
+   */
   update(){
     if (this.shouldFade){
       this.opacity = globalP5.map(this.timeAlive, 0, this.lifeSpan * 1000, 1, 0);
@@ -1355,6 +1495,23 @@ class Particle{
 }
 
 class ParticleEmitter{
+  /**
+   * Represents a particle emitter.
+   * @constructor
+   * @param {ParticleSystem} particleSystem - The particle system to which the emitter belongs.
+   * @param {p5.Vector} xVelRange - The range of x-axis velocity for the particles.
+   * @param {p5.Vector} yVelRange - The range of y-axis velocity for the particles.
+   * @param {string} particleName - The name of the particle.
+   * @param {p5.Vector} pos - The position of the emitter.
+   * @param {number} radius - The radius of the emitter.
+   * @param {number} spawnRate - The rate at which particles are spawned.
+   * @param {p5.Vector} densityRange - The range of particle density.
+   * @param {number} [triggerDelay=0] - The delay before the emitter starts emitting particles.
+   * @param {number} [emmiterLifeSpan=1] - The lifespan of the emitter.
+   * @param {string} [trigger="OnLoop"] - The trigger event for emitting particles.
+   * @param {object} [followObject=null] - The object to follow for emitting particles.
+   * @param {p5.Vector} [followObjectOffset=p5.Vector(0,0)] - The offset from the follow object's position.
+   */
   constructor(particleSystem, xVelRange, yVelRange, particleName, pos, radius, spawnRate, densityRange, triggerDelay=0, emmiterLifeSpan=1, trigger="OnLoop", followObject=null, followObjectOffset=globalP5.createVector(0,0)){
     this.particleSystem = particleSystem;
     this.particleName = particleName;
@@ -1378,6 +1535,9 @@ class ParticleEmitter{
     this.timeSinceLastUpdate = 60 * this.spawnRate;
   }
 
+  /**
+   * Spawns particles based on the given parameters.
+   */
   spawnParticles(){
     for (let i = 0; i < Math.round(this.radius / this.particleSystem.particles[this.particleName].sizeRange.y * globalP5.random(this.densityRange.x, this.densityRange.y)); i++){
       let position = this.pos.copy()
@@ -1394,6 +1554,10 @@ class ParticleEmitter{
     }
   }
 
+  /**
+   * Updates the particle system.
+   * @param {boolean} shouldSpawn - Determines if particles should be spawned.
+   */
   update(shouldSpawn=true){
     
     this.timeSinceLastUpdate += globalP5.deltaTime;
@@ -1422,25 +1586,37 @@ class ParticleEmitter{
 
       }
     }
-    
 
-    
-
-    
   }
-
-  
-
-
 }
 
 class ParticleSystem{
+  /**
+   * Represents a constructor for a class.
+   * @constructor
+   */
   constructor(){
     this.particles = {};
     this.ParticleEmitters = {};
     this.emitterInstances = [];
   }
 
+  /**
+   * Creates a new particle with the specified properties.
+   * @param {string} name - The name of the particle.
+   * @param {number} lifeSpan - The lifespan of the particle in frames.
+   * @param {string} color - The color of the particle.
+   * @param {number} [opacity=1] - The opacity of the particle (optional, default is 1).
+   * @param {boolean} [shouldFade=true] - Indicates whether the particle should fade over time (optional, default is true).
+   * @param {string} [shape="circle"] - The shape of the particle (optional, default is "circle").
+   * @param {p5.Vector} [sizeRange=globalP5.createVector(1, 5)] - The range of sizes for the particle (optional, default is a vector with values 1 and 5).
+   * @param {boolean} [hasGravity=false] - Indicates whether the particle is affected by gravity (optional, default is false).
+   * @param {number} [gravityScale=0.6] - The scale of gravity for the particle (optional, default is 0.6).
+   * @param {boolean} [hasWind=false] - Indicates whether the particle is affected by wind (optional, default is false).
+   * @param {number} [windScale=0.02] - The scale of wind for the particle (optional, default is 0.02).
+   * @param {p5.Vector} [windDirection=globalP5.createVector(1, 0)] - The direction of the wind for the particle (optional, default is a vector with values 1 and 0).
+   * @param {boolean} [glow=false] - Indicates whether the particle should have a glow effect (optional, default is false).
+   */
   createNewParticle({
     name,
     lifeSpan,
@@ -1458,7 +1634,24 @@ class ParticleSystem{
   }) {
     this.particles[name] = { lifeSpan, color, opacity, shouldFade, shape, sizeRange, hasGravity, gravityScale, hasWind, windScale, windDirection, glow};
   }
+
   
+  /**
+   * Creates a new particle emitter.
+   * @param {Object} options - The options for the particle emitter.
+   * @param {string} options.name - The name of the particle emitter.
+   * @param {string} options.particleName - The name of the particle.
+   * @param {number} options.radius - The radius of the particle emitter.
+   * @param {number} options.spawnRate - The spawn rate of the particles.
+   * @param {p5.Vector} options.densityRange - The range of particle density.
+   * @param {number} [options.triggerDelay=0] - The delay before triggering the emitter.
+   * @param {number} [options.emitterLifeSpan=1] - The lifespan of the emitter.
+   * @param {string} [options.trigger="OnLoop"] - The trigger for the emitter.
+   * @param {Object} [options.followObject=null] - The object to follow.
+   * @param {p5.Vector} [options.followObjectOffset=p5.Vector(0, 0)] - The offset from the follow object.
+   * @param {p5.Vector} [options.xVelRange=p5.Vector(-1, 1)] - The range of x velocity.
+   * @param {p5.Vector} [options.yVelRange=p5.Vector(-1, 1)] - The range of y velocity.
+   */
   createNewParticleEmitter({
     name,
     particleName,
@@ -1477,8 +1670,10 @@ class ParticleSystem{
   }
   
 
+  /**
+   * Updates the emitter instances and particles.
+   */
   update(){
-
     for (let i = this.emitterInstances.length - 1; i >= 0; i--){
   
       if(this.emitterInstances[i].timeAlive - this.emitterInstances[i].triggerDelay * 1000 >= this.emitterInstances[i].emmiterLifeSpan * 1000){
@@ -1500,10 +1695,13 @@ class ParticleSystem{
 
 
     }
-
-
   }
 
+  /**
+   * Spawns a particle emitter at the specified position.
+   * @param {string} emitterName - The name of the particle emitter.
+   * @param {p5.Vector} [pos=globalP5.createVector(0,0)] - The position of the emitter.
+   */
   spawnEmitter(emitterName, pos=globalP5.createVector(0,0)){
     pos = pos.copy();
     let emmiter = new ParticleEmitter(this, this.ParticleEmitters[emitterName].xVelRange, this.ParticleEmitters[emitterName].yVelRange, this.ParticleEmitters[emitterName].particleName, pos, this.ParticleEmitters[emitterName].radius, this.ParticleEmitters[emitterName].spawnRate, this.ParticleEmitters[emitterName].densityRange, this.ParticleEmitters[emitterName].triggerDelay, this.ParticleEmitters[emitterName].emitterLifeSpan, this.ParticleEmitters[emitterName].trigger, this.ParticleEmitters[emitterName].followObject, this.ParticleEmitters[emitterName].followObjectOffset);
