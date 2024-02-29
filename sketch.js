@@ -352,458 +352,6 @@ class GameObject {
 
 
 
-
-class Player extends GameObject{
-  constructor(gameEngine, initPos=globalP5.createVector(0,0)){
-    super(gameEngine, initPos)
-
-    this.maxEnergy = 200
-    this.maxHealth = 5
-    this.maxSheild = 5
-
-    this.energy = 200
-    this.health = 5
-    this.sheild = 5
-
-    this.shieldRegenerationSpeed = 0.1
-    this.timeSinceRegeneration = 0
-    this.gameEngine.playerObjects.push(this)
-  }
-
-  updatePlayer(){
-    
-    if (this.sheild < this.maxSheild){
-      this.timeSinceRegeneration += globalP5.deltaTime / 1000;
-
-      if (this.timeSinceRegeneration >= 1 / this.shieldRegenerationSpeed){
-        this.timeSinceRegeneration = 0;
-        this.sheild += 1;
-      }
-    }
-    
-    else{
-      this.timeSinceRegeneration = 0;
-    }
-
-  }
-
-  takeDamage(damage){
-    
-    this.sheild -= damage;
-
-
-    if (this.sheild < 0){
-      this.health += this.sheild;
-
-      this.sheild = 0;
-    }
-    
-    if (this.health <= 0){
-      this.health = 0
-      this.die();
-    }
-
-    
-  }
-
-  die(){
-    console.log('dead')
-  }
-}
-
-// class Enemy extends GameObject{
-//   constructor(gameEngine, initPos, spriteSheet, frames, enemySize, animationOffset, rotationPoint, weapon, colliderRadius, colliderOffset, damageMultiplier, health){
-//     super(gameEngine, initPos)
-
-//     this.spriteSheet = spriteSheet;
-//     this.frames = frames;
-//     this.enemySize = enemySize;
-//     this.animationOffset = animationOffset;
-//     this.rotationPoint = rotationPoint;
-//     this.weapon = weapon;
-//     this.colliderRadius = colliderRadius;
-//     this.colliderOffset = colliderOffset;
-
-//     this.damageMultiplier = damageMultiplier;
-//     this.health = health;
-
-//     this.addRigidBody(1, 0.5)
-
-//     this.addAnimator();
-    
-//     this.animator.createAnimation("default", this.spriteSheet, this.frames, this.enemySize);
-//     this.animator.animations.default.animationOffset = this.animationOffset;
-//     this.animator.animations.default.flipAxisOffset = 0
-
-//     this.addCircleCollider(colliderRadius, false, true, "enemy")
-//   }
-
-//   takeDamage(damage){
-//     this.health -= damage;
-    
-//     if (this.health <= 0){
-//       this.health = 0;
-//       this.die();
-//     }
-//   }
-
-//   updateEnemy(){
-
-//   }
-
-//   die(){
-//     console.log('dead');
-//   }
-
-// }
-
-class EnemySystem{
-  constructor(gameEngine){
-    this.gameEngine = gameEngine;
-
-    this.enemys = {};
-    this.enemyInstances = [];
-  }
-
-  createEnemy(enemyName, spriteSheet, frames, enemySize, animationOffset, rotationPoint, weapon, colliderRadius, colliderOffset, damageMultiplier, health){
-    this.enemys[enemyName] = {"gameEngine":this.gameEngine, "spriteSheet":spriteSheet, "frames":frames, 
-                              "enemySize":enemySize, "animationOffset":animationOffset, "rotationPoint":rotationPoint, 
-                              "weapon":weapon, "colliderRadius":colliderRadius, "colliderOffset":colliderOffset, "damageMultiplier": damageMultiplier, "health":health}
-  }
-
-  spawnEnemy(enemyName, spawnLocation){
-    this.enemyInstances.push({enemyName: new Enemy(this.enemys[enemyName].gameEngine, spawnLocation, this.enemys[enemyName].spriteSheet, this.enemys[enemyName].frames, 
-                              this.enemys[enemyName].enemySize, this.enemys[enemyName].animationOffset, this.enemys[enemyName].rotationPoint, this.enemys[enemyName].weapon, 
-                              this.enemys[enemyName].colliderRadius, this.enemys[enemyName].colliderOffset, this.enemys[enemyName].damageMultiplier, this.enemys[enemyName].health)})
-  }
-
-  update(){
-    
-    this.enemyInstances.forEach(enemy => {
-      enemy.enemyName.updateEnemy()
-    });
-  }
-
-}
-
-class ProjectileSystem{
-  constructor(gameEngine){
-    this.gameEngine = gameEngine;
-
-    this.projectiles = {}
-    this.projectileInstances = []
-      
-  }
-
-  createProjectile(name, spriteSheet, frames, size, animSpeed, travelSpeed, colliderRadius, colliderOffset){
-    this.projectiles[name] = {"spriteSheet":spriteSheet, "frames":frames, "size":size, "animSpeed": animSpeed, "travelSpeed":travelSpeed, "colliderRadius": colliderRadius, "colliderOffset":colliderOffset}
-  }
-
-  spawnProjectile(name, location, velocity, rotation){
-    this.projectileInstances.push({name:new Projectile(this.gameEngine, location, velocity, rotation, this.projectiles[name].spriteSheet, this.projectiles[name].frames, this.projectiles[name].size, this.projectiles[name].animSpeed, this.projectiles[name].travelSpeed, name, this.projectiles[name].colliderRadius, this.projectiles[name].colliderOffset)});
-
-  }
-
-  update(){
-    
-      this.projectileInstances.forEach(element => {
-        element.name.update()
-      });
-    
-    
-  }
-
-
-}
-
-class Projectile extends GameObject{
-  constructor(gameEngine, location, velocity, rotation, spriteSheet, frames, size, animSpeed, travelSpeed, name, colliderRadius, colliderOffset){
-    super(gameEngine, location)
-    this.gameEngine = gameEngine;
-    this.spriteSheet = spriteSheet;
-    this.frames = frames;
-    this.size = size;
-    this.animSpeed = animSpeed;
-    this.travelSpeed = travelSpeed;
-    this.projectileName = name;
-    
-    this.addCircleCollider(colliderRadius, true, true, colliderOffset, "projectile");
-    
-    this.addAnimator()
-
-    this.animator.createAnimation("default", this.spriteSheet, this.frames, this.size);
-    //this.animator.animations.default.animationOffset = this.animationOffset;
-    //this.animator.animations.default.flipAxisOffset = this.Transform.Position.x - attachPoint.x * 1.5
-
-    this.animator.transition("default");
-
-    this.lifeSpan = 10;
-
-    this.animator.animations.default.rotation = rotation
-    
-    this.addRigidBody(0.5, 1)
-    this.rigidBody.drag = 0
-    this.rigidBody.gravityScale = 0;
-    this.rigidBody.Velocity = p5.Vector.normalize(velocity.copy()).mult(this.travelSpeed);
-
-    this.timeAlive = 0
-  }
-
-  update() {
-    this.timeAlive += globalP5.deltaTime / 1000;
-    
-    this.animator.animations.default.rotation = Math.atan2(this.rigidBody.Velocity.y, this.rigidBody.Velocity.x) * 180 / Math.PI
-
-
-    for (const collider of this.colliders[0].collidingWith){
-      
-      if(collider.hasTag("enemy")){
-        collider.gameObject.takeDamage(1);
-        this.deleteProjectile()
-      }
-    }
-
-        const currentObject = this.gameEngine.gameObjects[this.name];
-        if (this.timeAlive >= this.lifeSpan) {
-            this.deleteProjectile()
-        }
-
-    
-  }
-
-  deleteProjectile(){
-    
-
-    for (let i = this.gameEngine.projectileSystem.projectileInstances.length-1; i >= 0; i--){
-      
-      if (Object.values(this.gameEngine.projectileSystem.projectileInstances[i])[0].name === this.name){
-        this.gameEngine.projectileSystem.projectileInstances.splice(i, 1)
-        
-      }
-    }
-    
-    this.delete();
-  }
-
-
-}
-
-
-class WeaponBase extends GameObject{
-  constructor(gameEngine, spriteSheet, frames, weaponSize, animationOffset, rotationPoint, location, playerObject, colliderSize, colliderOffset){
-    super(gameEngine, location);
-
-    this.playerObject = playerObject;
-
-    this.gameEngine = gameEngine;
-    this.spriteSheet = spriteSheet;
-    
-    this.frames = frames;
-    this.weaponSize = weaponSize;
-    this.animationOffset = animationOffset;
-    this.rotationPoint = rotationPoint;
-    this.flipPoint = rotationPoint
-
-    this.location = location
-
-    
-    this.addBoxCollider(colliderSize, true, false, colliderOffset, "weapon");
-
-    this.addAnimator();
-    
-    this.animator.createAnimation("default", this.spriteSheet, this.frames, this.weaponSize);
-    this.animator.animations.default.animationOffset = this.animationOffset;
-    this.animator.animations.default.flipAxisOffset = 0
-
-    this.animator.transition("default");
-
-
-
-  }
-}
-
-
-class GunBase extends WeaponBase{
-  constructor(gameEngine, spriteSheet, frames, weaponSize, animationOffset, rotationPoint, projectile, damageRange, energyCost, roundsPerSecond, isAutomatic, location, playerObject, colliderSize, colliderOffset, attachPoint, bulletToBarrelOffset){
-    super(gameEngine, spriteSheet, frames, weaponSize, animationOffset, rotationPoint, location, playerObject, colliderSize, colliderOffset)
-
-    this.projectile = projectile;
-
-    this.damageRange = damageRange;
-    this.energyCost = energyCost;
-    this.roundsPerSecond = roundsPerSecond;
-    this.isAutomatic = isAutomatic;
-
-
-    this.attachPoint = attachPoint;
-    this.bulletToBarrelOffset = bulletToBarrelOffset;
-
-    this.isAttached = false;
-
-    this.projectileSpawnPoint = globalP5.createVector(0,0)
-
-    this.animator.transition("default");
-
-    this.directionNormal = globalP5.createVector(0,0)
-    
-    this.timeSinceLastShot = 0
-  }
-
-  
-
-  shoot(){
-    this.timeSinceLastShot = 0;
-    this.gameEngine.projectileSystem.spawnProjectile(this.projectile, this.projectileSpawnPoint, this.directionNormal, this.projectileRotation)
-  }
-
-  updateWeapon(){
-    this.timeSinceLastShot += globalP5.deltaTime / 1000
-
-
-    for (const collider of this.colliders[0].collidingWith){
-      if(collider.hasTag("player") && this.gameEngine.inputSystem.getInputDown("pickup")){
-        this.isAttached = true;
-      }
-    }
-    
-    
-    globalP5.angleMode(globalP5.DEGREES)
-
-    if (this.isAttached){
-      
-      let directionVector = p5.Vector.sub(globalP5.createVector(globalP5.mouseX, globalP5.mouseY), globalP5.createVector(this.gameEngine.screenWidth / 2 + this.gameEngine.mainCamera.cameraOffset.x + this.attachPoint.x, this.gameEngine.screenHeight / 2 + this.gameEngine.mainCamera.cameraOffset.y + + this.attachPoint.y));
-      let directionNormal = p5.Vector.normalize(directionVector)
-      this.directionNormal = directionNormal;
-      const gunToMouseAngle = Math.atan2(directionNormal.y, directionNormal.x) * 180 / Math.PI
-
-
-      if (gunToMouseAngle > -90 && gunToMouseAngle < 90){
-        this.projectileRotation = this.animator.currentAnimation.rotation;
-
-        this.Transform.Position = this.playerObject.Transform.Position.copy().add(this.attachPoint)
-
-        this.animator.flip = false;
-
-        let directionVector = p5.Vector.sub(globalP5.createVector(globalP5.mouseX, globalP5.mouseY), globalP5.createVector(this.gameEngine.screenWidth / 2 + this.gameEngine.mainCamera.cameraOffset.x + this.attachPoint.x, this.gameEngine.screenHeight / 2 + this.gameEngine.mainCamera.cameraOffset.y + + this.attachPoint.y));
-        let directionNormal = p5.Vector.normalize(directionVector)
-        this.directionNormal = directionNormal;
-        
-        const angle = Math.atan2(directionNormal.y, directionNormal.x) * 180 / Math.PI
-        this.animator.currentAnimation.rotation = angle
-
-        const unRotatedprojectileSpawnPoint = this.Transform.Position.copy().add(this.bulletToBarrelOffset);
-        
-        this.projectileSpawnPoint = globalP5.createVector(
-              (unRotatedprojectileSpawnPoint.x - this.Transform.Position.x) * globalP5.cos(angle) - (unRotatedprojectileSpawnPoint.y - this.Transform.Position.y) * globalP5.sin(angle) + this.Transform.Position.x,
-              (unRotatedprojectileSpawnPoint.y - this.Transform.Position.y) * globalP5.cos(angle) + (unRotatedprojectileSpawnPoint.x - this.Transform.Position.x) * globalP5.sin(angle) + this.Transform.Position.y
-              );
-
-
-        this.playerObject.rigidBody.gameObject.animator.flip = false;
-
-        
-      }
-
-      else{
-        this.animator.flip = true;
-        this.projectileRotation = -this.animator.currentAnimation.rotation + 180;
-
-        this.Transform.Position = this.playerObject.Transform.Position.copy().sub(globalP5.createVector(0, -this.attachPoint.y))
-
-        let directionVector = p5.Vector.sub(globalP5.createVector(globalP5.mouseX, globalP5.mouseY), globalP5.createVector(this.gameEngine.screenWidth / 2 + this.gameEngine.mainCamera.cameraOffset.x, this.gameEngine.screenHeight / 2 + this.gameEngine.mainCamera.cameraOffset.y + this.attachPoint.y));
-        let directionNormal = p5.Vector.normalize(directionVector)
-        this.directionNormal = directionNormal;
-
-        const angle = (-Math.atan2(directionNormal.y, directionNormal.x) + 1 * Math.PI) * 180 / Math.PI
-
-        const unRotatedprojectileSpawnPoint = (this.Transform.Position.copy().sub(globalP5.createVector(this.bulletToBarrelOffset.x, -this.bulletToBarrelOffset.y))).copy();
-        this.projectileSpawnPoint = globalP5.createVector(
-          (unRotatedprojectileSpawnPoint.x - this.Transform.Position.x) * globalP5.cos(-angle) - (unRotatedprojectileSpawnPoint.y - this.Transform.Position.y) * globalP5.sin(-angle) + this.Transform.Position.x,
-          (unRotatedprojectileSpawnPoint.y - this.Transform.Position.y) * globalP5.cos(-angle) + (unRotatedprojectileSpawnPoint.x - this.Transform.Position.x) * globalP5.sin(-angle) + this.Transform.Position.y
-          );
-        
-        
-        
-        
-        this.animator.currentAnimation.rotation = angle
-
-        this.playerObject.rigidBody.gameObject.animator.flip = true; 
-      }
-
-
-
-      if (this.gameEngine.inputSystem.getInput("shoot") && this.isAttached && this.timeSinceLastShot >= (1 / this.roundsPerSecond)){
-        this.shoot()
-      }
-
-      if (this.gameEngine.inputSystem.getInputDown("drop")){
-        this.animator.currentAnimation.rotation = 0;
-        this.isAttached = false;
-      }
-      
-    }
-   
-  }
-
-
-}
-
-class Melee extends GameObject{
-  constructor(){
-
-  }
-}
-
-class CustomWeapon extends GameObject{
-  constructor(){
-
-  }
-}
-
-
-
-class WeaponSystem {
-  constructor(gameEngine){
-    this.gameEngine = gameEngine
-    this.weapons = {}
-
-    this.weaponInstances = []
-
-    this.gameEngine.inputSystem.addMouseInput("shoot", globalP5.LEFT)
-    this.gameEngine.inputSystem.addKeyboardInput("pickup", "e")
-    this.gameEngine.inputSystem.addKeyboardInput("drop", "e")
-  }
-
-  createGun(name, spriteSheet, frames, weaponSize, animationOffset, rotationPoint, projectile, damageRange, energyCost, roundsPerSecond, isAutomatic, colliderSize, colliderOffset, attachPoint, bulletToBarrelOffset){
-    this.weapons[name] = {"gameEngine":this.gameEngine, "spriteSheet":spriteSheet, "frames":frames, "weaponSize":weaponSize, "animationOffset":animationOffset, "rotationPoint":rotationPoint, 
-                          "projectile":projectile, "damageRange":damageRange, "energyCost":energyCost, "roundsPerSecond":roundsPerSecond, "isAutomatic":isAutomatic, "colliderSize":colliderSize, 
-                          "colliderOffset":colliderOffset, "attachPoint":attachPoint , "bulletToBarrelOffset":bulletToBarrelOffset};
-  }
-
-  createMelee(){
-    
-  }
-
-  summonGun(weaponName, location, playerObject){
-    this.weaponInstances.push({weaponName: new GunBase(this.weapons[weaponName].gameEngine, this.weapons[weaponName].spriteSheet, this.weapons[weaponName].frames, this.weapons[weaponName].weaponSize, 
-                              this.weapons[weaponName].animationOffset, this.weapons[weaponName].rotationPoint, this.weapons[weaponName].projectile, this.weapons[weaponName].damageRange, 
-                              this.weapons[weaponName].energyCost, this.weapons[weaponName].roundsPerSecond, this.weapons[weaponName].isAutomatic, location, playerObject, this.weapons[weaponName].colliderSize, 
-                              this.weapons[weaponName].colliderOffset, this.weapons[weaponName].attachPoint, this.weapons[weaponName].bulletToBarrelOffset)})
-
-    
-  }
-
-  update(){
-    
-    this.weaponInstances.forEach(weapon => {
-      weapon.weaponName.updateWeapon()
-    });
-  }
-
-}
-
-
-
 class InputSystem{
   // For the gameEngine class
   
@@ -1962,20 +1510,18 @@ class ParticleSystem{
 
     this.emitterInstances.push(emmiter);
   }
-
-
-
 }
 
 
 
 
 class GameEngine {
+  /**
+   * Creates a new instance of the class.
+   * @param {string} gameStateScriptPath - The path to the game state script.
+   */
   constructor(gameStateScriptPath){
     this.inputSystem = new InputSystem();
-    this.weaponSystem = new WeaponSystem(this);
-    this.projectileSystem = new ProjectileSystem(this);
-    this.enemySystem = new EnemySystem(this);
     this.scriptSystem = new ScriptSystem(globalP5, this);
     this.particleSystem = new ParticleSystem();
     this.imageSystem = new ImageSystem();
@@ -1986,13 +1532,18 @@ class GameEngine {
       this.gameStateScript = script;
       this.gameStateScript.Preload();
     });
-      
-    
-
   }
 
   
 
+  /**
+   * Initializes the game setup.
+   * 
+   * @param {number} [fps=60] - The desired frames per second.
+   * @param {boolean} [resizeToFit=false] - Whether to resize the canvas to fit the window.
+   * @param {number} [screenWidth=400] - The width of the game screen.
+   * @param {number} [screenHeight=400] - The height of the game screen.
+   */
   Setup(fps=60, resizeToFit=false, screenWidth=400, screenHeight=400){
     this.screenWidth = screenWidth;
     this.screenHeight = screenHeight;
@@ -2068,28 +1619,53 @@ class GameEngine {
 
   }
   
+  /**
+   * Sets the width of the canvas.
+   * @param {number} width - The new width of the canvas.
+   */
   setCanvasWidth(width){
     this.screenWidth = width;
     globalP5.resizeCanvas(this.screenWidth, this.screenHeight);
   }
 
+  /**
+   * Sets the height of the canvas.
+   * @param {number} height - The new height of the canvas.
+   */
   setCanvasHeight(height){
     this.screenHeight = height;
     globalP5.resizeCanvas(this.screenWidth, this.screenHeight);
   }
   
+  /**
+   * Adds a camera to the sketch.
+   * @param {string} cameraName - The name of the camera.
+   * @param {GameObject} object - The object to be tracked by the camera.
+   * @param {p5.Vector} [cameraOffset=globalP5.createVector(0,0)] - The offset of the camera from the tracked object.
+   */
   addCamera(cameraName, object, cameraOffset=globalP5.createVector(0,0)){
     const camera = new Camera(object, this.screenWidth, this.screenHeight, cameraOffset);
     this.cameras[cameraName] = camera;
     this.mainCamera = camera;
   }
 
+  /**
+   * Broadcasts an event with the given name and data.
+   * @param {string} eventName - The name of the event.
+   * @param {any} data - The data to be passed along with the event.
+   */
   broadCastEvent(eventName, data){
     const newEvent = new CustomEvent(eventName, { detail: data });
 
     window.dispatchEvent(newEvent);
   }
 
+  /**
+   * Registers an event listener for the specified event name.
+   * 
+   * @param {string} eventName - The name of the event to listen for.
+   * @param {function} func - The callback function to be executed when the event is triggered.
+   */
   onEvent(eventName, func){
     window.addEventListener(eventName, event => {
         func(event.detail); 
@@ -2098,6 +1674,11 @@ class GameEngine {
   }
 
 
+  /**
+   * Loads a level and initializes its script.
+   * @param {string} levelName - The name of the level to load.
+   * @param {string} levelManagerScriptName - The name of the script that manages the level.
+   */
   loadLevel(levelName, levelManagerScriptName){
     this.backgroundImage = null;
     this.backgroundSize = null;
@@ -2124,6 +1705,11 @@ class GameEngine {
     this.currentLevelScript.Start();
   }
 
+  /**
+   * Adds objects to a specific level.
+   * @param {string} levelName - The name of the level.
+   * @param {Array} objects - An array of objects to be added.
+   */
   addObjectsToLevel(levelName, objects){
     for (const object of objects){
       if (this.currentLevel = levelName){
@@ -2133,6 +1719,11 @@ class GameEngine {
     
   }
 
+  /**
+   * Adds a camera to the specified level.
+   * @param {string} levelName - The name of the level.
+   * @param {string} cameraName - The name of the camera.
+   */
   addCameraToLevel(levelName, cameraName){
     if (cameraName === null){
       this.mainCamera = null;
@@ -2147,6 +1738,11 @@ class GameEngine {
   }
 
 
+  /**
+   * Loads a game state script asynchronously.
+   * @param {string} scriptPath - The path to the script file.
+   * @returns {Promise} A promise that resolves with the loaded script instance.
+   */
   async loadGameStateScript(scriptPath) {
     return new Promise((resolve, reject) => {
         import(scriptPath)
@@ -2159,22 +1755,20 @@ class GameEngine {
                 reject(error);
             });
     });
-}
+  }
 
   
   
   
+  /**
+   * Detects collision between two colliders.
+   * @param {Collider} collider1 - The first collider.
+   * @param {Collider} collider2 - The second collider.
+   */
   detectCollision(collider1, collider2){
-      
       if(collider1.gameObject === collider2.gameObject){
-        
-         return;
-        
-     }
-      
-      
-
-      
+         return; 
+      }
       
     
       if (collider1.colliderType === "circle" && collider2.colliderType === "circle"){
@@ -2384,11 +1978,18 @@ class GameEngine {
         }
       }
     
-    
   }
 
 
-
+  /**
+   * Checks if a ray intersects with a rectangle defined by minimum and maximum bounds.
+   *
+   * @param {p5.Vector} startPoint - The starting point of the ray.
+   * @param {p5.Vector} dir - The direction of the ray.
+   * @param {p5.Vector} minBounds - The minimum bounds of the rectangle.
+   * @param {p5.Vector} maxBounds - The maximum bounds of the rectangle.
+   * @returns {boolean} Returns true if the ray intersects with the rectangle, otherwise false.
+   */
   intersectRect(startPoint, dir, minBounds, maxBounds) {
     // code pulled from https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-box-intersection.html 
     // Code Translated from c# and commented by chat-gpt 3.5 (slightly adapted by me)
@@ -2460,6 +2061,15 @@ class GameEngine {
 
 
 
+  /**
+   * Calculates if a ray intersects with a sphere.
+   * 
+   * @param {p5.Vector} orig - The starting point of the ray.
+   * @param {p5.Vector} dir - The direction of the ray.
+   * @param {p5.Vector} center - The center point of the sphere.
+   * @param {number} radius - The radius of the sphere.
+   * @returns {boolean} - True if the ray intersects with the sphere, false otherwise.
+   */
   intersectSphere(orig, dir, center, radius) {
     // https://stackoverflow.com/questions/1073336/circle-line-segment-collision-detection-algorithm
     // Code Translated from c# and commented by chat-gpt 3.5 (slightly adapted by me)
@@ -2528,6 +2138,13 @@ class GameEngine {
   }
 
   
+  /**
+   * Checks for collision between a circle and other game objects.
+   * @param {number} radius - The radius of the circle.
+   * @param {p5.Vector} position - The position of the circle.
+   * @param {Array} gameObjectValues - An array of game objects to check collision against.
+   * @returns {Array} - An array of game objects colliding with the circle.
+   */
   circleCheck(radius, position, gameObjectValues){
     let physCheckObject = new GameObject(this, position, "circleCheckObject")
     physCheckObject.addCircleCollider(radius, true, false, globalP5.createVector(0,0))
@@ -2555,6 +2172,14 @@ class GameEngine {
   }
 
   
+  /**
+   * Resolves collision between two circle rigid bodies.
+   * @param {RigidBody} rigidBody1 - The first circle rigid body.
+   * @param {RigidBody} rigidBody2 - The second circle rigid body.
+   * @param {p5.Vector} collisionNormal - The collision normal vector.
+   * @param {number} distanceBetweenCenters - The distance between the centers of the circles.
+   * @param {number} minDistance - The minimum distance between the circles for them to be considered colliding.
+   */
   resolveCircleToCircleCollision(rigidBody1, rigidBody2, collisionNormal, distanceBetweenCenters, minDistance){
     // Calculate relative velocity
       const coefficientOfRestitution = Math.min(rigidBody1.bounce, rigidBody2.bounce);
@@ -2586,6 +2211,13 @@ class GameEngine {
       rigidBody2.addForce(impulseDirection.copy(), -impulseMagnitude);
   }
   
+  /**
+   * Resolves collision between two rigid bodies.
+   * @param {RigidBody} rigidBody1 - The first rigid body involved in the collision.
+   * @param {RigidBody} rigidBody2 - The second rigid body involved in the collision.
+   * @param {p5.Vector} collisionNormal - The collision normal vector.
+   * @param {number} overlap - The amount of overlap between the two rigid bodies.
+   */
   resolveOtherCollision(rigidBody1, rigidBody2, collisionNormal, overlap){
     // Calculate relative velocity
       const coefficientOfRestitution = Math.min(rigidBody1.bounce, rigidBody2.bounce);
@@ -2628,6 +2260,12 @@ class GameEngine {
   
   
   
+  /**
+   * Draws the background image on the canvas.
+   * 
+   * @param {p5.Image} img - The image to be displayed as the background.
+   * @param {p5.Vector} size - The size of the image to be displayed. If null, the image will be displayed at the full screen size.
+   */
   drawBackground(img=null,  size=null){
     globalP5.push()
     this.currentBackgroundScroll += this.backgroundScrollSpeed;
@@ -2647,6 +2285,11 @@ class GameEngine {
   }
   
 
+  /**
+   * Sets the background image and size.
+   * @param {p5.Image} img - The image URL or path.
+   * @param {p5.Vector} size - The size of the background image.
+   */
   setBackground(img, size){
     this.backgroundImage = img;
     this.backgroundSize = size;
@@ -2654,6 +2297,10 @@ class GameEngine {
 
 
 
+  /**
+   * Checks for collisions between game objects.
+   * @param {Object} gameObjectValues - The values of game objects.
+   */
   checkAllCollisions(gameObjectValues){
     try{
       const objects = Object.values(gameObjectValues);
@@ -2674,6 +2321,14 @@ class GameEngine {
   
   }
   
+  /**
+   * Culls objects within a specified range based on collision detection.
+   * 
+   * @param {number} range - The range within which objects should be culled.
+   * @param {object} position - The position of the culling object.
+   * @param {Array} gameObjectValues - An array of game objects to be culled.
+   * @returns {Array} - An array of culled objects.
+   */
   cullObjects(range, position, gameObjectValues){
     let physCheckObject = new GameObject(this, position, "circleCheckObject")
     physCheckObject.addCircleCollider(range, true, false, globalP5.createVector(0,0))
@@ -2706,6 +2361,11 @@ class GameEngine {
   }
 
 
+  /**
+   * Adds culling functionality to the object.
+   * @param {GameObject} gameObject - The game object to center the culling around.
+   * @param {number} range - The range within which the object should be visible.
+   */
   addCulling(gameObject, range){
     this.cullingObject = gameObject;
     this.cullingRange = range;
@@ -2715,6 +2375,10 @@ class GameEngine {
 
 
 
+  /**
+   * Updates the game state and renders the game objects.
+   * Runs in the p5.js draw loop.
+   */
   update(){
     
     if (this.resizeToFit){
@@ -2759,7 +2423,7 @@ class GameEngine {
           this.playerObjects[i].updatePlayer();
       }
 
-      this.enemySystem.update()
+      
 
       for (const name in gameObjectValues) {
       if (gameObjectValues.hasOwnProperty(name)) {
@@ -2769,14 +2433,6 @@ class GameEngine {
         gameObject.collidingWith = [];
         
         }}
-
-
-    
-      
-      
-
-      this.weaponSystem.update();
-      this.projectileSystem.update();
 
       
 
@@ -2852,12 +2508,26 @@ class GameEngine {
 
 
 export class MonoBehaviour {
+  /**
+   * Represents a constructor function.
+   * @constructor
+   * @param {p5} p5Var - The p5 instance.
+   * @param {GameEngine} gameEngine - The game engine.
+   * @param {GameObject} gameObject - The game object.
+   */
   constructor(p5Var, gameEngine, gameObject){
     this.p5 = p5Var;
     this.gameEngine = gameEngine;
     this.gameObject = gameObject;
   }
 
+  /**
+   * Calculates the angle between the camera and the mouse position.
+   * @param {Camera} camera - The camera object.
+   * @param {number} screenWidth - The width of the screen.
+   * @param {number} screenHeight - The height of the screen.
+   * @returns {number} The angle between the camera and the mouse position in degrees.
+   */
   static cameraToMouseAngle(camera, screenWidth, screenHeight){
     const directionVector = p5.Vector.sub(globalP5.createVector(globalP5.mouseX, globalP5.mouseY), globalP5.createVector(screenWidth / 2 + camera.cameraOffset.x, screenHeight / 2 + camera.cameraOffset.y));
     const directionNormal = p5.Vector.normalize(directionVector)
@@ -2867,6 +2537,14 @@ export class MonoBehaviour {
   }
 
 
+  /**
+   * Calculates the direction vector from the camera to the mouse position.
+   * 
+   * @param {Camera} camera - The camera object.
+   * @param {number} screenWidth - The width of the screen.
+   * @param {number} screenHeight - The height of the screen.
+   * @returns {p5.Vector} - The normalized direction vector from the camera to the mouse position.
+   */
   static cameraToMouseDirection(camera, screenWidth, screenHeight){
     const directionVector = p5.Vector.sub(globalP5.createVector(globalP5.mouseX, globalP5.mouseY), globalP5.createVector(screenWidth / 2 + camera.cameraOffset.x, screenHeight / 2 + camera.cameraOffset.y));
     const directionNormal = p5.Vector.normalize(directionVector)
