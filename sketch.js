@@ -11,6 +11,12 @@ let sketch;
 let globalP5;
 let preloadDone = false;
 
+
+/**
+ * Waits for a condition to be met.
+ * @param {Function} condition - The condition to wait for.
+ * @returns {Promise} A promise that resolves when the condition is met.
+ */
 function waitForCondition(condition) {
   return new Promise((resolve) => {
     const intervalId = setInterval(() => {
@@ -72,28 +78,17 @@ let game = function(p){
 
 
 
-class SaveSystem{
-  constructor(){
-    this.saves = {};
-
-  }
-
-  saveGame(saveName, gameEngine){
-    let saveData = {};
-
-    return saveData;
-  }
-
-  loadGame(saveName){
-    const saveData = this.saves[saveName];
-    
-
-    return this.saves[saveName];
-  }
-
-}
 
 class GameObject {
+  /**
+   * Represents a game object in the game engine.
+   * @constructor
+   * @param {GameEngine} gameEngine - The game engine instance.
+   * @param {p5.Vector} [initPos=globalP5.createVector(0,0)] - The initial position of the game object.
+   * @param {string} [name=null] - The name of the game object.
+   * @param {string} [levelName=null] - The name of the level.
+   */
+  
   constructor(gameEngine, initPos=globalP5.createVector(0,0), name=null, levelName=null) {
     this.Transform = {Position:initPos, Rotation:0, Scale:globalP5.createVector(0,0)};
     this.gameEngine = gameEngine;
@@ -138,18 +133,20 @@ class GameObject {
     this.colliders = []
   }
   
+  /**
+   * Deletes the current object.
+   */
   delete() {
-    
-
     this.scripts = {};
     delete this.gameEngine.gameObjects[this.name];
     delete this.gameEngine.currentLevelObjects[this.name];
-  
-      
   }
 
 
-
+  /**
+   * Rotates the object by the specified angle in degrees.
+   * @param {number} angleInDegrees - The angle in degrees to rotate the object.
+   */
   rotateObject(angleInDegrees){
     globalP5.push();
     globalP5.translate(this.Transform.Position.x, this.Transform.Position.y)
@@ -159,10 +156,19 @@ class GameObject {
   }
   
   
+  /**
+   * Adds a tag to the list of tags.
+   * @param {string} tag - The tag to be added.
+   */
   addTag(tag){
     this.tags.push(tag)
   }
   
+  /**
+   * Checks if the given tag exists in the tags array.
+   * @param {string} tag - The tag to check.
+   * @returns {boolean} - True if the tag exists, false otherwise.
+   */
   hasTag(tag){
     if (this.tags.includes(tag)){
         return true;
@@ -170,6 +176,12 @@ class GameObject {
   }
   
   
+  /**
+   * Adds a script to the game object.
+   * 
+   * @param {string} scriptName - The name of the script to add.
+   * note: the scirpt must be loaded in the game engine before it can be added to a game object.
+   */
   addScript(scriptName){
     const script = this.gameEngine.scriptSystem.getScript(scriptName)
     const scriptInstance = new script.default(globalP5, this.gameEngine, this);
@@ -178,18 +190,43 @@ class GameObject {
   }
 
   
+  /**
+   * Adds a sprite renderer to the sketch.
+   * @param {Image} img - The image to be rendered as a sprite.
+   * @param {p5.Vector} imgSize - The size of the image in pixels. Defaults to null.
+   * @param {string} spriteColor - The color of the sprite. Defaults to null.
+   * @param {boolean} glow - Whether the sprite should have a glow effect. Defaults to false.
+   * @param {string} glowColor - The color of the glow effect. Defaults to null.
+   */
   addSpriteRenderer(img, imgSize=null, spriteColor=null, glow=false, glowColor=null){
     this.spriteRenderer = new SpriteRenderer(this, img, imgSize, spriteColor, glow, glowColor);
   }
   
+  /**
+   * Adds a rigid body to the object.
+   * @param {number} mass - The mass of the rigid body.
+   * @param {number} bounce - The bounce factor of the rigid body.
+   * @param {number} [drag=0.02] - The drag coefficient of the rigid body.
+   */
   addRigidBody(mass, bounce, drag=0.02){
     this.rigidBody = new RigidBody(this, mass, bounce, drag);
   }
   
+  /**
+   * Adds an animator to the sketch.
+   */
   addAnimator(){
     this.animator = new Animator(this);
   }
   
+  /**
+   * Adds a box collider to the sketch.
+   * @param {p5.Vector} colliderSize - The size of the collider.
+   * @param {boolean} [isTrigger=false] - Whether the collider is a trigger.
+   * @param {boolean} [isContinuous=false] - Whether the collider is continuous.
+   * @param {p5.Vector} [colliderOffset=globalP5.createVector(0,0)] - The offset of the collider.
+   * @param {string} [tag=null] - The tag associated with the collider.
+   */
   addBoxCollider(colliderSize, isTrigger=false, isContinuous=false, colliderOffset=globalP5.createVector(0,0), tag=null){
     const boxCollider = new BoxCollider(this, colliderSize, isTrigger, isContinuous, colliderOffset);
     
@@ -200,6 +237,14 @@ class GameObject {
     this.colliders.push(boxCollider);
   }
   
+  /**
+   * Adds a circle collider to the sketch.
+   * @param {number} colliderRadius - The radius of the collider.
+   * @param {boolean} [isTrigger=false] - Whether the collider is a trigger or not.
+   * @param {boolean} [isContinuous=false] - Whether the collider is continuous or not.
+   * @param {p5.Vector} [colliderOffset=globalP5.createVector(0,0)] - The offset of the collider.
+   * @param {string} [tag=null] - The tag associated with the collider.
+   */
   addCircleCollider(colliderRadius, isTrigger=false, isContinuous=false, colliderOffset=globalP5.createVector(0,0), tag=null){
     const circleCollider = new CircleCollider(this, colliderRadius, isTrigger, isContinuous, colliderOffset);
     
@@ -210,10 +255,25 @@ class GameObject {
     this.colliders.push(circleCollider)
   }
   
+  /**
+   * Adds a platformer player controller to the object.
+   * @param {number} accelerationScale - The scale factor for acceleration.
+   * @param {number} deccelerationScale - The scale factor for deceleration.
+   * @param {number} maxSpeed - The maximum speed of the player.
+   * @param {number} jumpPower - The power of the player's jump.
+   * @param {number} [airControl=1] - The control factor for movement in the air. Defaults to 1.
+   */
   addPlatformerPlayerController(accelerationScale, deccelerationScale, maxSpeed, jumpPower, airControl=1){
     this.platformerPlayerController = new PlatformerPlayerController(this.rigidBody, accelerationScale, deccelerationScale, maxSpeed, jumpPower, airControl);
   }
   
+  /**
+   * Adds a top-down player controller to the object.
+   * @param {number} accelerationScale - The scale factor for player acceleration.
+   * @param {number} deccelerationScale - The scale factor for player deceleration.
+   * @param {number} maxSpeed - The maximum speed for the player.
+   * @param {number} [horizontalBias=1] - The bias for horizontal movement.
+   */
   addTopDownPlayerController(accelerationScale, deccelerationScale, maxSpeed, horizontalBias=1){
     this.topDownPlayerController = new TopDownPlayerController(this.rigidBody, accelerationScale, deccelerationScale, maxSpeed, horizontalBias)
     console.log(this.topDownPlayerController)
@@ -221,6 +281,9 @@ class GameObject {
   
   
   
+  /**
+   * Updates the components of the game every frame, called in the game engine update method.
+   */
   updateComponents(){
     if (this.Started === false){
       this.Started = true;
@@ -257,6 +320,10 @@ class GameObject {
   
   
   
+  /**
+   * Renders the components of the game object every frame, 
+   * called in the game engine update method after the components have been updated.
+   */
   renderComponents(){
     if (this.spriteRenderer !== null){
         this.spriteRenderer.update()
@@ -276,8 +343,6 @@ class GameObject {
       
       
     }
-    
-    
     
   }
 }
@@ -878,6 +943,13 @@ class InputSystem{
 
 
 class Camera {
+  /**
+   * Constructs a new Camera object.
+   * @param {Object} objectToFollow - The object that the camera will follow.
+   * @param {number} screenWidth - The width of the screen.
+   * @param {number} screenHeight - The height of the screen.
+   * @param {p5.Vector} [cameraOffset=globalP5.createVector(0,100)] - The offset of the camera from the object being followed.
+   */
   constructor(objectToFollow, screenWidth, screenHeight, cameraOffset=globalP5.createVector(0,100)) {
     
     this.offSetValue = cameraOffset;
@@ -908,9 +980,12 @@ class Camera {
     this.targetY = this.objectToFollow.Transform.Position.y - this.screenHeight / 2;
     
     const scaleFactor = Math.min(globalP5.width / 2560, globalP5.height / 1440);
+
     globalP5.translate((globalP5.width / 2 + this.cameraOffset.x), (globalP5.height / 2 + this.cameraOffset.y));
     globalP5.scale(scaleFactor, scaleFactor);
     globalP5.translate(-(globalP5.width / 2 + this.cameraOffset.x), -(globalP5.height / 2 + this.cameraOffset.y));
+
+    // Translate the canvas to the camera position
     globalP5.translate(-this.targetX + this.cameraOffset.x, -this.targetY + this.cameraOffset.y);
     
     
@@ -923,6 +998,15 @@ class Camera {
 
 
 class SpriteRenderer {
+  /**
+   * Creates a new instance of the class.
+   * @param {GameObject} gameObject - The game object associated with the sprite.
+   * @param {Image} img - The image used for the sprite.
+   * @param {p5.Vector} imgSize - The size of the image (optional).
+   * @param {P5ColorObject} spriteColor - The color of the sprite (optional).
+   * @param {boolean} glow - Indicates if the sprite should have a glow effect (optional).
+   * @param {P5ColorObject} glowColor - The color of the glow effect (optional).
+   */
   constructor(gameObject, img, imgSize=null, spriteColor=null, glow=false, glowColor=null){
     this.gameObject = gameObject;
     this.imgSize = imgSize;
@@ -1008,6 +1092,13 @@ class SpriteRenderer {
 }
 
 class RigidBody {
+  /**
+   * Creates a new instance of the GameObject class.
+   * @param {GameObject} gameObject - The game object associated with the physics body.
+   * @param {number} mass - The mass of the physics body.
+   * @param {number} bounce - The bounce factor of the physics body.
+   * @param {number} drag - The drag coefficient of the physics body.
+   */
   constructor(gameObject, mass, bounce, drag){
     this.gameObject = gameObject;
     this.Velocity = globalP5.createVector(0,0)
@@ -1069,6 +1160,14 @@ class RigidBody {
 
 
 class TopDownPlayerController{
+  /**
+   * Constructs a new instance of the class.
+   * @param {RigidBody} rigidBody - The rigid body associated with the object.
+   * @param {number} accelerationScale - The scale factor for acceleration.
+   * @param {number} deccelerationScale - The scale factor for deceleration.
+   * @param {number} maxSpeed - The maximum speed of the object.
+   * @param {number} horizontalBias - The horizontal bias of the object (optional).
+   */
   constructor(rigidBody, accelerationScale, deccelerationScale, maxSpeed, horizontalBias=1){
     this.rigidBody = rigidBody;
     this.accelerationScale = accelerationScale;
@@ -1151,6 +1250,15 @@ class TopDownPlayerController{
 
 
 class PlatformerPlayerController{
+  /**
+   * Constructs a new instance of the class.
+   * @param {RigidBody} rigidBody - The rigid body associated with the object.
+   * @param {number} accelerationScale - The scale factor for acceleration.
+   * @param {number} deccelerationScale - The scale factor for deceleration.
+   * @param {number} maxSpeed - The maximum speed of the object.
+   * @param {number} jumpPower - The power of the object's jump.
+   * @param {number} airControl - The air control factor of the object. (optional)
+   */
   constructor(rigidBody, accelerationScale, deccelerationScale, maxSpeed, jumpPower, airControl=1){
     this.rigidBody = rigidBody;
     this.accelerationScale = accelerationScale;
@@ -1250,6 +1358,14 @@ class PlatformerPlayerController{
 }
 
 class Animation{
+  /**
+   * Creates a new instance of the class.
+   * @param {Image} spriteSheetImg - The sprite sheet image.
+   * @param {number} numOfFrames - The number of frames in the sprite sheet.
+   * @param {number} size - The size of the sprite. (optional)
+   * @param {number} speed - The speed of the animation. (optional)
+   * @param {number} rotation - The rotation angle of the sprite. (optional)
+   */
   constructor(spriteSheetImg, numOfFrames, size=1, speed=10, rotation=0){
     
     this.spriteSheet = spriteSheetImg;
@@ -1287,6 +1403,11 @@ class Animation{
 }
 
 class Animator {
+  /**
+   * Represents a constructor for a game object.
+   * @constructor
+   * @param {GameObject} gameObject - The game object associated with the animator.
+   */
   constructor(gameObject){
     this.gameObject = gameObject;
     this.animations = {};
@@ -1303,12 +1424,25 @@ class Animator {
     this.animationOffset = globalP5.createVector(0,0)
   }
   
+  /**
+   * Creates an animation and adds it to the animations object.
+   * @param {string} name - The name of the animation.
+   * @param {string} spriteSheetImg - The image URL of the sprite sheet.
+   * @param {number} numOfFrames - The number of frames in the sprite sheet.
+   * @param {number} [size=1] - The size of the animation.
+   * @param {number} [speed=10] - The speed of the animation.
+   * @param {number} [rotation=0] - The rotation of the animation.
+   */
   createAnimation(name, spriteSheetImg, numOfFrames, size=1, speed=10, rotation=0){
-    
     this.animations[name] = new Animation(spriteSheetImg, numOfFrames, size, speed, rotation);
   }
 
   
+  /**
+   * Transitions to the specified animation.
+   * @param {string} animToShow - The name of the animation to transition to.
+   * @param {boolean} [shouldFinish=false] - Indicates whether the current animation should be finished before transitioning.
+   */
   transition(animToShow, shouldFinish=false){
     this.inTransition = true;
     this.finishCurrentAnim = shouldFinish;
@@ -1321,9 +1455,6 @@ class Animator {
     else{
       this.nextAnimation = this.animations[animToShow]
     }
-    
-   
-    
     
   }
   
@@ -1421,6 +1552,15 @@ class Animator {
 
 
 class BoxCollider {
+  /**
+   * Represents a Collider object.
+   * @constructor
+   * @param {GameObject} gameObject - The game object that the collider is attached to.
+   * @param {p5.Vector} colliderSize - The size of the collider.
+   * @param {boolean} [isTrigger=false] - Whether the collider is a trigger or not.
+   * @param {boolean} [isContinuous=false] - Whether the collider should continuously check for collisions.
+   * @param {p5.Vector} [colliderOffset=globalP5.createVector(0,0)] - The offset of the collider from the game object's position.
+   */
   constructor(gameObject, colliderSize, isTrigger=false, isContinuous=false, colliderOffset=globalP5.createVector(0,0)){
     this.colliderType = "rect";
     this.gameObject = gameObject;
@@ -1447,15 +1587,21 @@ class BoxCollider {
     this.midTop = globalP5.createVector(this.Transform.Position.x + colliderSize.x / 2, this.Transform.Position.y);
     this.midBottom = globalP5.createVector(this.Transform.Position.x + colliderSize.x / 2, this.Transform.Position.y + colliderSize.y);
     
-    
-    
-    
   }
   
+  /**
+   * Adds a tag to the colliderTags array.
+   * @param {string} tag - The tag to be added.
+   */
   addTag(tag){
     this.colliderTags.push(tag)
   }
   
+  /**
+   * Checks if the object has a specific tag.
+   * @param {string} tag - The tag to check.
+   * @returns {boolean} - True if the object has the tag, false otherwise.
+   */
   hasTag(tag){
     if (this.colliderTags.includes(tag)){
       return true;
@@ -1474,6 +1620,9 @@ class BoxCollider {
     globalP5.noStroke()
   }
   
+  /**
+   * Updates the position and calculates the corner and mid points of the collider.
+   */
   update(){
     this.Transform.Position = this.gameObject.Transform.Position.copy().add(this.colliderOffset)
     
