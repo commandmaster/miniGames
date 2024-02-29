@@ -907,7 +907,12 @@ class Camera {
     this.targetX = this.objectToFollow.Transform.Position.x - this.screenWidth / 2;
     this.targetY = this.objectToFollow.Transform.Position.y - this.screenHeight / 2;
     
+    const scaleFactor = Math.min(globalP5.width / 2560, globalP5.height / 1440);
+    globalP5.translate((globalP5.width / 2 + this.cameraOffset.x), (globalP5.height / 2 + this.cameraOffset.y));
+    globalP5.scale(scaleFactor, scaleFactor);
+    globalP5.translate(-(globalP5.width / 2 + this.cameraOffset.x), -(globalP5.height / 2 + this.cameraOffset.y));
     globalP5.translate(-this.targetX + this.cameraOffset.x, -this.targetY + this.cameraOffset.y);
+    
     
     
   }

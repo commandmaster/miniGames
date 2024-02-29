@@ -25,6 +25,7 @@ export default class FlappyBirdLevelManager{
 
         bird.addScript("birdScript");
 
+
         let groundZone = new MonoBehaviour.GameObject(this.gameEngine, this.p5.createVector(0, this.gameEngine.screenHeight - 270 * this.gameEngine.screenHeight/1380), "GroundZone");
         groundZone.addRigidBody(10000000, 0, 0);
         groundZone.rigidBody.gravityScale = 0;
@@ -32,6 +33,7 @@ export default class FlappyBirdLevelManager{
         groundZone.addScript("groundZoneScript");
 
         this.gameEngine.addObjectsToLevel(this.levelName, [bird, groundZone]);
+        
 
 
         this.scoreTxt = this.p5.createButton("Score: 0");
