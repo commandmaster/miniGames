@@ -43,12 +43,14 @@ export default class GameState{
 
     Setup(){
         // Load Title Screen
-        // this.gameEngine.debug = true;
-        // this.gameEngine.rayDebug = false;
+        //this.gameEngine.debug = true;
+        this.gameEngine.rayDebug = false;
         this.gameEngine.loadLevel("titleScreen", "titleLevelManager");
         
 
-        
+        window.addEventListener("resize", () => {
+          location.reload();
+        });
 
     }
 

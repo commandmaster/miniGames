@@ -25,13 +25,15 @@ export default class FlappyBirdLevelManager{
 
         bird.addScript("birdScript");
 
-        let groundZone = new MonoBehaviour.GameObject(this.gameEngine, this.p5.createVector(0, this.gameEngine.screenHeight - 270), "GroundZone");
+
+        let groundZone = new MonoBehaviour.GameObject(this.gameEngine, this.p5.createVector(0, this.gameEngine.screenHeight - 270 * this.gameEngine.screenHeight/1380), "GroundZone");
         groundZone.addRigidBody(10000000, 0, 0);
         groundZone.rigidBody.gravityScale = 0;
         groundZone.addBoxCollider(this.p5.createVector(this.gameEngine.screenWidth, this.gameEngine.screenHeight), false, true);
         groundZone.addScript("groundZoneScript");
 
         this.gameEngine.addObjectsToLevel(this.levelName, [bird, groundZone]);
+        
 
 
         this.scoreTxt = this.p5.createButton("Score: 0");
@@ -73,10 +75,10 @@ export default class FlappyBirdLevelManager{
 
             this.gameEngine.backgroundScrollSpeed = 0;
 
-            this.scoreTxt.style("font-size", "64px");
+            this.scoreTxt.style("font-size", String(64 * this.gameEngine.screenHeight / 1440) + "px");
             this.scoreTxt.style("color", "#fca146");
             this.scoreTxt.style("text-shadow", "-2px -2px 0 white, 2px -2px 0 white, -2px 2px 0 white, 2px 2px 0 white");
-            this.scoreTxt.position(this.gameEngine.screenWidth / 2 - this.scoreTxt.size().width/2, this.gameEngine.screenHeight / 2 - 100);
+            this.scoreTxt.position(this.gameEngine.screenWidth / 2 - this.scoreTxt.size().width/2, this.gameEngine.screenHeight / 2 - 100 * this.gameEngine.screenHeight / 1440);
 
 
             let highScore = this.p5.getItem("flappyHighScore");
@@ -89,41 +91,41 @@ export default class FlappyBirdLevelManager{
             if (highScore !== null){
                 this.highScoreTxt = this.p5.createButton("High Score: " + String(highScore));
                 
-                this.highScoreTxt.style("font-size", "64px");
+                this.highScoreTxt.style("font-size", String(64 * this.gameEngine.screenHeight / 1440) + "px");
                 this.highScoreTxt.style("background-color", "transparent");
                 this.highScoreTxt.style("color", "#fca146");
                 this.highScoreTxt.style("text-shadow", "-2px -2px 0 white, 2px -2px 0 white, -2px 2px 0 white, 2px 2px 0 white");
                 this.highScoreTxt.style("font-family", "Pixelo, Arial, sans-serif");
                 this.highScoreTxt.style("border", "none");
 
-                this.highScoreTxt.position(this.gameEngine.screenWidth / 2 - this.highScoreTxt.size().width/2, this.gameEngine.screenHeight / 2 - 250);
+                this.highScoreTxt.position(this.gameEngine.screenWidth / 2 - this.highScoreTxt.size().width/2, this.gameEngine.screenHeight / 2 - 250 * this.gameEngine.screenHeight / 1440);
 
             }
             
-            let flappyGameOver = new MonoBehaviour.GameObject(this.gameEngine, this.p5.createVector(this.gameEngine.screenWidth / 2, this.gameEngine.screenHeight / 2 - 400), "FlappyGameOver");
-            flappyGameOver.addSpriteRenderer(this.gameEngine.imageSystem.getImage("flappyGameOver"), this.p5.createVector(192*3, 42*3));
+            let flappyGameOver = new MonoBehaviour.GameObject(this.gameEngine, this.p5.createVector(this.gameEngine.screenWidth / 2, this.gameEngine.screenHeight / 2 - 400 * this.gameEngine.screenHeight / 1440), "FlappyGameOver");
+            flappyGameOver.addSpriteRenderer(this.gameEngine.imageSystem.getImage("flappyGameOver"), this.p5.createVector(192*3 * this.gameEngine.screenHeight / 1440, 42*3 * this.gameEngine.screenHeight / 1440));
 
             this.gameEngine.addObjectsToLevel(this.levelName, [flappyGameOver]);
             this.gameOver = true;
 
             this.retryBtn = this.p5.createButton("Retry");
             
-            this.retryBtn.style("font-size", "64px");
+            this.retryBtn.style("font-size", String(64 * this.gameEngine.screenHeight / 1440) + "px");
             this.retryBtn.style("background-color", "transparent");
             this.retryBtn.style("color", "#fca146");
             this.retryBtn.style("font-family", "Pixelo, Arial, sans-serif");
             this.retryBtn.style("border", "none");
             this.retryBtn.style("text-shadow", "-2px -2px 0 white, 2px -2px 0 white, -2px 2px 0 white, 2px 2px 0 white");
-            this.retryBtn.position(this.gameEngine.screenWidth / 2 - this.retryBtn.size().width/2, this.gameEngine.screenHeight / 2 + 150);
+            this.retryBtn.position(this.gameEngine.screenWidth / 2 - this.retryBtn.size().width/2, this.gameEngine.screenHeight / 2 + 150 * this.gameEngine.screenHeight / 1440);
 
             this.backToMenuBtn = this.p5.createButton("Menu");
-            this.backToMenuBtn.style("font-size", "64px");
+            this.backToMenuBtn.style("font-size", String(64 * this.gameEngine.screenHeight / 1440) + "px");
             this.backToMenuBtn.style("background-color", "transparent");
             this.backToMenuBtn.style("color", "#fca146");
             this.backToMenuBtn.style("font-family", "Pixelo, Arial, sans-serif");
             this.backToMenuBtn.style("border", "none");
             this.backToMenuBtn.style("text-shadow", "-2px -2px 0 white, 2px -2px 0 white, -2px 2px 0 white, 2px 2px 0 white");
-            this.backToMenuBtn.position(this.gameEngine.screenWidth / 2 - this.backToMenuBtn.size().width/2, this.gameEngine.screenHeight / 2 + 250);
+            this.backToMenuBtn.position(this.gameEngine.screenWidth / 2 - this.backToMenuBtn.size().width/2, this.gameEngine.screenHeight / 2 + 250 * this.gameEngine.screenHeight / 1440);
 
            
 
@@ -174,7 +176,7 @@ export default class FlappyBirdLevelManager{
         upperPipe.addBoxCollider(this.p5.createVector(280, this.gameEngine.screenHeight*relativeY - gap/2), false, true);
         upperPipe.addScript("pipeScript");
 
-        let lowerPipe = new MonoBehaviour.GameObject(this.gameEngine, this.p5.createVector(this.gameEngine.screenWidth + 100, this.gameEngine.screenHeight*relativeY + gap/2), "LowerPipe" + String(this.uniquePipeId));
+        let lowerPipe = new MonoBehaviour.GameObject(this.gameEngine, this.p5.createVector(this.gameEngine.screenWidth + 100, Math.min(this.gameEngine.screenHeight*relativeY + gap/2, this.gameEngine.screenHeight - 300 * this.gameEngine.screenHeight / 1440)), "LowerPipe" + String(this.uniquePipeId));
         
         lowerPipe.addAnimator();
         lowerPipe.animator.createAnimation("default", this.gameEngine.imageSystem.getImage("lowerPipe"), 1, pipeScale, 1)
@@ -183,7 +185,7 @@ export default class FlappyBirdLevelManager{
 
         lowerPipe.addRigidBody(10000000, 1, 0);
         lowerPipe.rigidBody.gravityScale = 0;
-        lowerPipe.addBoxCollider(this.p5.createVector(280, (this.gameEngine.screenHeight - 275) - (this.gameEngine.screenHeight*relativeY + gap/2)), false, true);
+        lowerPipe.addBoxCollider(this.p5.createVector(280, (this.gameEngine.screenHeight - 290 * this.gameEngine.screenHeight / 1440) - (this.gameEngine.screenHeight*relativeY + gap/2)), false, true);
         lowerPipe.addScript("pipeScript");
 
 
