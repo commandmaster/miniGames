@@ -217,7 +217,7 @@ export default class Player extends MonoBehaviour{
       this.p5.push();
       this.p5.drawingContext.shadowBlur = 20;
       
-      this.p5.drawingContext.shadowColor = this.p5.color(255, 0, 0);
+      this.p5.drawingContext.shadowColor = this.p5.color(colorR, colorG, colorB);
       this.p5.strokeWeight(strokeW);
       this.p5.stroke(this.p5.color(colorR, colorG, colorB));
       this.p5.line(this.gameEngine.mainCamera.position.x + startOffset * dir.x, this.gameEngine.mainCamera.position.y + startOffset * dir.y, this.p5.mouseX, this.p5.mouseY);
