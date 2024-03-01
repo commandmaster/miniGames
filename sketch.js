@@ -9,7 +9,7 @@
 // You can ignore the engine code if you would like and just look at the code located in the game state and other scripts. Here is where you will find the code I used to actually develop the games you can play.
 
 
-let sketch;
+
 let globalP5;
 let preloadDone = false;
 
