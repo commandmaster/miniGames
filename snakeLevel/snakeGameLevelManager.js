@@ -9,6 +9,8 @@ export default class SnakeGameLevelManager{
 
     Start(){
       this.gameOver = false;
+      this.dificultyChosen = false;
+
       this.squareSize = 25;
       this.spacing = 5;
       this.startingPos = this.p5.createVector(0, 0);
@@ -26,11 +28,16 @@ export default class SnakeGameLevelManager{
       this.gameEngine.inputSystem.addKeyboardInput('snakeDown', 's', 'bool')
       this.gameEngine.inputSystem.addKeyboardInput('snakeLeft', 'a', 'bool')
       this.gameEngine.inputSystem.addKeyboardInput('snakeRight', 'd', 'bool')
+      this.gameEngine.inputSystem.addKeyboardInput('restart', 'r', 'bool')
 
       this.gameEngine.inputSystem.addBindToKeyboardInput('snakeUp', 38)
       this.gameEngine.inputSystem.addBindToKeyboardInput('snakeDown', 40)
       this.gameEngine.inputSystem.addBindToKeyboardInput('snakeLeft', 37)
       this.gameEngine.inputSystem.addBindToKeyboardInput('snakeRight', 39)
+      this.gameEngine.inputSystem.addBindToKeyboardInput('restart', 82)
+
+      this.gameEngine.inputSystem.addKeyboardInput('menu', 'm', 'bool')
+      this.gameEngine.inputSystem.addBindToKeyboardInput('menu', 77)
 
       
       this.grid = [];
@@ -68,7 +75,7 @@ export default class SnakeGameLevelManager{
 
       this.scoreTxt = this.p5.createButton("Score: " + this.score);
       this.scoreTxt.position(25, 25);
-      this.scoreTxt.style("font-size", "24px");
+      this.scoreTxt.style("font-size", String(48 * this.gameEngine.screenHeight/1440) + "px");
       this.scoreTxt.style("font-family", "Pixelo, Arial");
       this.scoreTxt.style("background-color", "transparent");
       this.scoreTxt.style("border", "none");
@@ -78,6 +85,83 @@ export default class SnakeGameLevelManager{
     }
 
     Update(){
+      if (!this.dificultyChosen){
+        while (true){
+          let dificulty = prompt("Choose a dificulty between 1 and 3");
+          if (dificulty === "1" || dificulty === "2" || dificulty === "3"){
+            this.dificulty = Number(dificulty);
+            this.dificultyChosen = true;
+            break;
+          }
+        }
+        return;
+      }
+
+
+      if (this.gameOver){
+        if (!this.gOverTxt || !this.restTxt || !this.scoreTxt){
+          this.gOverTxt = this.p5.createButton("Game Over");
+          this.gOverTxt.style("font-size", String(256 * this.gameEngine.screenHeight/1440) + "px");
+          this.gOverTxt.style("font-family", "Pixelo, Arial");
+          this.gOverTxt.size(this.gameEngine.screenWidth, this.gOverTxt.size().height)
+          this.gOverTxt.position(this.gameEngine.screenWidth/2 - this.gOverTxt.size().width/2, this.gameEngine.screenHeight/2 - 750 * this.gameEngine.screenHeight/1440);
+          this.gOverTxt.style("background-color", "transparent");
+          this.gOverTxt.style("border", "none");
+          this.gOverTxt.style("color", "#00ff00");
+          this.gOverTxt.style("outline", "none");
+          this.gOverTxt.style("z-index", "1000");
+
+          this.restTxt = this.p5.createButton("Press R to restart");
+          this.restTxt.style("font-size", String(64 * this.gameEngine.screenHeight/1440) + "px");
+          this.restTxt.size(this.gameEngine.screenWidth, this.restTxt.size().height)
+          this.restTxt.style("font-family", "Pixelo, Arial");
+          this.restTxt.position(this.gameEngine.screenWidth/2 - this.restTxt.size().width/2, this.gameEngine.screenHeight/2 - 250 * this.gameEngine.screenHeight/1440);
+          this.restTxt.style("background-color", "transparent");
+          this.restTxt.style("border", "none");
+          this.restTxt.style("color", "#00ff00");
+          this.restTxt.style("outline", "none");
+          this.restTxt.style("z-index", "1000");
+
+          this.menuTxt = this.p5.createButton("Press M to go back to the menu");
+          this.menuTxt.style("font-size", String(64 * this.gameEngine.screenHeight/1440) + "px");
+          this.menuTxt.size(this.gameEngine.screenWidth, this.menuTxt.size().height)
+          this.menuTxt.style("font-family", "Pixelo, Arial");
+          this.menuTxt.position(this.gameEngine.screenWidth/2 - this.menuTxt.size().width/2, this.gameEngine.screenHeight/2 - 100 * this.gameEngine.screenHeight/1440);
+          this.menuTxt.style("background-color", "transparent");
+          this.menuTxt.style("border", "none");
+          this.menuTxt.style("color", "#00ff00");
+          this.menuTxt.style("outline", "none");
+          this.menuTxt.style("z-index", "1000");
+
+
+          
+        }
+
+        if (this.p5.getItem("snakeHighScore") === null){
+          this.p5.storeItem("snakeHighScore", this.score);
+        }
+
+        else if (this.score > Number(this.p5.getItem("snakeHighScore"))){
+          this.p5.storeItem("snakeHighScore", this.score);
+        }
+
+        this.scoreTxt.value("Score " + String(this.score) + " High Score " + this.p5.getItem("snakeHighScore"));
+        this.scoreTxt.html("Score " + String(this.score) + " High Score " + this.p5.getItem("snakeHighScore"));
+        this.scoreTxt.position(this.gameEngine.screenWidth/2 - this.scoreTxt.size().width/2, this.gameEngine.screenHeight/2 + 100  * this.gameEngine.screenHeight/1440);
+
+        if (this.gameEngine.inputSystem.getInputDown("restart")){
+          this.gameEngine.loadLevel("snakeGameLevel", "snakeGameLevelManager");
+        }
+
+        if (this.gameEngine.inputSystem.getInputDown("menu")){
+          this.gameEngine.loadLevel("titleScreen", "titleLevelManager");
+        }
+        
+        return;
+      }
+        
+      
+
       this.timeSinceLastMove += this.p5.deltaTime;
 
       if (!this.gameOver){
@@ -232,7 +316,10 @@ export default class SnakeGameLevelManager{
   
 
     End(){
-
+      this.scoreTxt.remove();
+      this.gOverTxt.remove();
+      this.restTxt.remove();
+      this.menuTxt.remove();
     }
 
     
