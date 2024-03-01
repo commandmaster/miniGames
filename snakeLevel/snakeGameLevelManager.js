@@ -8,11 +8,11 @@ export default class SnakeGameLevelManager{
     }
 
     Start(){
-      this.uniqueSnakePieceId = 0;
-      this.uniqueSnakeGridPieceId = 0;
+      this.gameOver = false;
       this.squareSize = 25;
       this.spacing = 5;
       this.startingPos = this.p5.createVector(0, 0);
+      this.pieceQueue = 0;
       
       this.pieces = [];
       this.direction = this.p5.createVector(1, 0);
@@ -80,40 +80,56 @@ export default class SnakeGameLevelManager{
     Update(){
       this.timeSinceLastMove += this.p5.deltaTime;
 
-      if (this.gameEngine.inputSystem.getInputDown("snakeUp")){
-        if (this.pieces[0].direction.y !== 1){
-          this.direction = this.p5.createVector(0, -1);
+      if (!this.gameOver){
+        if (this.gameEngine.inputSystem.getInputDown("snakeUp")){
+          if (this.pieces[0].direction.y !== 1){
+            this.direction = this.p5.createVector(0, -1);
+          }
+
         }
 
-      }
+        if (this.gameEngine.inputSystem.getInputDown("snakeDown")){
+            if (this.pieces[0].direction.y !== -1){
+              this.direction = this.p5.createVector(0, 1);
+            }
 
-      if (this.gameEngine.inputSystem.getInputDown("snakeDown")){
-          if (this.pieces[0].direction.y !== -1){
-            this.direction = this.p5.createVector(0, 1);
+        }
+
+        if (this.gameEngine.inputSystem.getInputDown("snakeLeft")){
+            if (this.pieces[0].direction.x !== 1){
+              this.direction = this.p5.createVector(-1, 0);
+            }
+
+        }
+
+        if (this.gameEngine.inputSystem.getInputDown("snakeRight")){
+            if (this.pieces[0].direction.x !== -1){
+              this.direction = this.p5.createVector(1, 0);
+            } 
+
+        }
+
+        if (this.timeSinceLastMove > 200){
+          if (this.pieceQueue > 0){
+            this.createPiece()
+            this.pieceQueue--;
           }
 
+          this.timeSinceLastMove = 0;
+          this.updatePieces();
+        }
       }
 
-      if (this.gameEngine.inputSystem.getInputDown("snakeLeft")){
-          if (this.pieces[0].direction.x !== 1){
-            this.direction = this.p5.createVector(-1, 0);
-          }
-
+      else{
+        
       }
-
-      if (this.gameEngine.inputSystem.getInputDown("snakeRight")){
-          if (this.pieces[0].direction.x !== -1){
-            this.direction = this.p5.createVector(1, 0);
-          } 
-
-      }
-
-      if (this.timeSinceLastMove > 200){
-        this.timeSinceLastMove = 0;
-        this.updatePieces();
-      }
-        this.drawGrid();
       
+      
+      
+      this.drawGrid();
+      
+      this.scoreTxt.value("Score " + String(this.score));
+      this.scoreTxt.html("Score " + String(this.score));
     }
 
     updatePieces(){
@@ -133,22 +149,24 @@ export default class SnakeGameLevelManager{
 
           if (this.grid[this.pieces[i].x][this.pieces[i].y] === 1){
             console.log("Game Over");
+            this.gameOver = true;
             return;
           }
 
           else if (this.grid[this.pieces[i].x][this.pieces[i].y] === 2){
             this.score += 4 - this.dificulty;
-            
-              
-              
             this.grid[this.pieces[i].x][this.pieces[i].y] = 3;
             
-            this.createPiece();
+            
+            this.pieceQueue += 4 - this.dificulty;
+            
+
             this.spawnApple();
             
           }
 
           else if (this.grid[this.pieces[i].x][this.pieces[i].y] === 3){
+            this.gameOver = true;
             console.log("Game Over");
             return;
           }
