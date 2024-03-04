@@ -142,13 +142,6 @@ export default class Player extends MonoBehaviour{
         
       }
 
-      if(this.gameObject.rigidBody.Velocity.mag() > 15){
-        //this.gameEngine.particleSystem.spawnEmitter("trailEmitter");
-      }
-
-      
-
-
       if (this.gameEngine.inputSystem.getInputDown('SuperBounce')){
         this.bounceStarted = true;
       }

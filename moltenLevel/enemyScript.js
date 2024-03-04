@@ -9,19 +9,19 @@ export default class Enemy{
 
     Start(){
 
-    
     }
 
     Update(){
         let wasHit = false;
 
-
+        // Check if the enemy is colliding with any game object tagged as "Player" or "lava"
         for (const collider of this.gameObject.colliders[0].collidingWith){
             if (collider.gameObject.hasTag("Player") || collider.gameObject.hasTag("lava")){
                 wasHit = true;
             }
         }
 
+        // If the enemy was hit, delete the game object
         if (wasHit){
             this.gameObject.delete();
         }

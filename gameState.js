@@ -4,7 +4,6 @@ export default class GameState{
     constructor(p5Var, gameEngine){
       this.p5 = p5Var;
       this.gameEngine = gameEngine;
-
     }
 
     Preload(){
@@ -43,30 +42,22 @@ export default class GameState{
 
     Setup(){
         // Load Title Screen
-        //this.gameEngine.debug = true;
-        this.gameEngine.rayDebug = false;
         this.gameEngine.loadLevel("titleScreen", "titleLevelManager");
         
 
         window.addEventListener("resize", () => {
+          // To prevent unintended behavior, reload the page on resize
           location.reload();
         });
 
     }
 
-
-
-
-
-
-
     Start(){
-        
-    
+      // Runs at the start of the game
     }
 
     Update(){
-
+      // Runs every frame
     }
 
   }

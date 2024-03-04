@@ -20,7 +20,8 @@ export default class SnakeGameLevelManager{
       this.direction = this.p5.createVector(1, 0);
       this.dificulty = 1; 
       
-      this.endPos = this.p5.createVector(Math.min(this.gameEngine.screenWidth, this.gameEngine.screenHeight), Math.min(this.gameEngine.screenWidth, this.gameEngine.screenHeight)); // Create a vector for the end position of the grid based on the screen size
+      // Create a vector for the end position of the grid based on the screen size
+      this.endPos = this.p5.createVector(Math.min(this.gameEngine.screenWidth, this.gameEngine.screenHeight), Math.min(this.gameEngine.screenWidth, this.gameEngine.screenHeight));       
       
       this.timeSinceLastMove = 0;
 
