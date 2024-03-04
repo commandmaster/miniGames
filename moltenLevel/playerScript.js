@@ -128,7 +128,7 @@ export default class Player extends MonoBehaviour{
 
         if (this.charge > 0 ) {
           if (this.timeHeldDown < 2000){
-            this.shoot(this.charge * 0.1);
+            this.shoot(Math.min(this.charge * 0.1 * 1440/this.gameEngine.screenHeight, 50));
           }
 
           this.charge = 0;
