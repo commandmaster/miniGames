@@ -1,13 +1,15 @@
 
-// Project Title
-// Your Name
-// Date
+// Mini Game - Interactive Scene
+// Bennett Friesen
+// 2/29/2024
 //
 // Extra for Experts:
-// - describe what you did to take this project "above and beyond"
+// I built a game engine from scratch using p5.js. I also created documentation for the game engine located at https://commandmaster.github.io/EngineDocs/ (the engine is still in development).
+// I also used p5js to add html document elements to the game.
+// You can ignore the engine code if you would like and just look at the code located in the game state and other scripts. Here is where you will find the code I used to actually develop the games you can play.
 
 
-let sketch;
+
 let globalP5;
 let preloadDone = false;
 
@@ -43,14 +45,7 @@ let game = function(p){
   };
 
   p.setup = function(){
-    
     myGameEngine.Setup(60, true, 800, 800);
-
-   
-
-  
-
-    
   }
 
   p.draw = function(){
@@ -58,13 +53,8 @@ let game = function(p){
     
 
   };
-
+  
 }
-
-
-
-
-
 
 
 

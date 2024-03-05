@@ -128,7 +128,7 @@ export default class Player extends MonoBehaviour{
 
         if (this.charge > 0 ) {
           if (this.timeHeldDown < 2000){
-            this.shoot(this.charge * 0.1);
+            this.shoot(Math.min(this.charge * 0.1 * 1440/this.gameEngine.screenHeight, 50));
           }
 
           this.charge = 0;
@@ -141,13 +141,6 @@ export default class Player extends MonoBehaviour{
         
         
       }
-
-      if(this.gameObject.rigidBody.Velocity.mag() > 15){
-        //this.gameEngine.particleSystem.spawnEmitter("trailEmitter");
-      }
-
-      
-
 
       if (this.gameEngine.inputSystem.getInputDown('SuperBounce')){
         this.bounceStarted = true;
@@ -217,7 +210,7 @@ export default class Player extends MonoBehaviour{
       this.p5.push();
       this.p5.drawingContext.shadowBlur = 20;
       
-      this.p5.drawingContext.shadowColor = this.p5.color(255, 0, 0);
+      this.p5.drawingContext.shadowColor = this.p5.color(colorR, colorG, colorB);
       this.p5.strokeWeight(strokeW);
       this.p5.stroke(this.p5.color(colorR, colorG, colorB));
       this.p5.line(this.gameEngine.mainCamera.position.x + startOffset * dir.x, this.gameEngine.mainCamera.position.y + startOffset * dir.y, this.p5.mouseX, this.p5.mouseY);
