@@ -58,16 +58,8 @@ let game = function(p){
     
 
   };
-  
-  
-  
-  
 
 }
-
-
-
-
 
 
 
