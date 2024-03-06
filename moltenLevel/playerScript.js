@@ -193,7 +193,7 @@ export default class Player extends MonoBehaviour{
 
           
           
-          this.gameEngine.particleSystem.spawnEmitter("bloodEmitter", collider.gameObject.Transform.Position);
+          this.gameEngine.particleSystem.spawnEmitter("bloodEmitter", collider.gameObject.transform.Position);
         }
     }
       

@@ -17,7 +17,7 @@ export default class ScoreZoneScript{
 
     Update(){
         // Check if the x position of the game object is less than or equal to -300
-        if (this.gameObject.Transform.Position.x <= -300){
+        if (this.gameObject.transform.Position.x <= -300){
             // Delete the game object
             this.gameObject.delete();
         }

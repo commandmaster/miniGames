@@ -19,7 +19,7 @@ export default class LavaFloor{
 
     Update(){
         let speed = this.speed
-        if (Math.abs(this.gameEngine.gameObjects["player1"].Transform.Position.y - this.gameObject.Transform.Position.y) > 1500){
+        if (Math.abs(this.gameEngine.gameObjects["player1"].transform.Position.y - this.gameObject.transform.Position.y) > 1500){
             speed *= 20;
         }
         

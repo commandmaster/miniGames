@@ -10,7 +10,7 @@ export default class EnemySpawner{
     Start(){
         this.uniqueEnemyId = 0; // Initialize the unique enemy ID, used to make sure that each enemy has a unique name
         this.runTime = 0; // Initialize the runtime
-        this.playerPosition = this.gameEngine.gameObjects["player1"].Transform.Position; // Get the position of the player object
+        this.playerPosition = this.gameEngine.gameObjects["player1"].transform.Position; // Get the position of the player object
         this.currentChunk = this.p5.createVector(0, 0); // Initialize the current chunk vector
         this.lastChunk = this.p5.createVector(0, 0); // Initialize the last chunk vector
         this.loadedChunks = {}; // Initialize the loaded chunks object   

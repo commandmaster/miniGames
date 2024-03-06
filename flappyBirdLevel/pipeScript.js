@@ -24,7 +24,7 @@ export default class PipeScript{
         }
 
         // Delete the pipe object when it goes off the screen
-        if (this.gameObject.Transform.Position.x <= -300){
+        if (this.gameObject.transform.Position.x <= -300){
             this.gameObject.delete();
         }
 

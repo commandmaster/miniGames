@@ -9,9 +9,9 @@
 // You can ignore the engine code if you would like and just look at the code located in the game state and other scripts. Here is where you will find the code I used to actually develop the games you can play.
 
 
-
-let globalP5;
 let preloadDone = false;
+let globalP5;
+
 
 
 /**
@@ -36,7 +36,6 @@ let game = function(p){
   globalP5 = p;
 
   p.preload = async function(){
-    //globalP5.colorMode(globalP5.HSB, 255);
     myGameEngine = new GameEngine("./gameState.js");
 
     setTimeout(() => {
@@ -72,11 +71,13 @@ class GameObject {
    */
   
   constructor(gameEngine, initPos=globalP5.createVector(0,0), name=null, levelName=null) {
-    this.Transform = {Position:initPos, Rotation:0, Scale:globalP5.createVector(0,0)};
+
+    this.transform = new Transform(initPos, 0, globalP5.createVector(1,1));
+    
     this.gameEngine = gameEngine;
     this.Started = false;
 
-
+    this.scriptNames = [];
     
     const length = Object.keys(this.gameEngine.gameObjects).length;
     
@@ -131,7 +132,7 @@ class GameObject {
    */
   rotateObject(angleInDegrees){
     globalP5.push();
-    globalP5.translate(this.Transform.Position.x, this.Transform.Position.y)
+    globalP5.translate(this.transform.Position.x, this.transform.Position.y)
     globalP5.rotate(angleInDegrees)
     globalP5.rectMode(CENTER)
     globalP5.pop()
@@ -167,8 +168,11 @@ class GameObject {
   addScript(scriptName){
     const script = this.gameEngine.scriptSystem.getScript(scriptName)
     const scriptInstance = new script.default(globalP5, this.gameEngine, this);
-
     this.scripts[scriptName] = scriptInstance;
+
+    if (!this.scriptNames.includes(scriptName)){
+      this.scriptNames.push(scriptName);
+    }
   }
 
   
@@ -326,6 +330,52 @@ class GameObject {
       
     }
     
+  }
+
+  static deserialize(gameEngine, {transform, name, tags, ignoreCulling, colliders, spriteRenderer, rigidBody, animator, scriptNames, platformerPlayerController, topDownPlayerController}){
+    const gameObject = new GameObject(gameEngine, transform.Position, name);
+    gameObject.transform = Transform.deserialize(transform);
+    gameObject.name = name;
+    gameObject.tags = tags;
+    gameObject.ignoreCulling = ignoreCulling;
+    gameObject.spriteRenderer = SpriteRenderer.deserialize(gameObject, spriteRenderer);
+    gameObject.rigidBody = RigidBody.deserialize(gameObject, rigidBody);
+    gameObject.animator = Animator.deserialize(gameObject, animator);
+    gameObject.scriptNames = scriptNames;
+    gameObject.platformerPlayerController = PlatformerPlayerController.deserialize(gameObject.rigidBody, platformerPlayerController);
+    gameObject.topDownPlayerController = TopDownPlayerController.deserialize(gameObject.rigidBody, topDownPlayerController);
+
+    for (const collider of colliders){
+      if (collider.colliderType === "rect"){
+        gameObject.addBoxCollider(collider.colliderSize, collider.isTrigger, collider.isContinuous, collider.colliderOffset, collider.tag);
+      }
+
+      else if (collider.colliderType === "circle"){
+        gameObject.addCircleCollider(collider.colliderRadius, collider.isTrigger, collider.isContinuous, collider.colliderOffset, collider.tag);
+      }
+    }
+
+    for (const scriptName of scriptNames){
+      gameObject.addScript(scriptName);
+    }
+
+    return gameObject;
+  }
+
+  serialize(){
+    return {
+      transform: this.transform.serialize(),
+      name: this.name,
+      tags: this.tags,
+      ignoreCulling: this.ignoreCulling,
+      colliders: this.colliders.forEach(collider => collider.serialize()),
+      spriteRenderer: this.spriteRenderer.serialize(),
+      rigidBody: this.rigidBody.serialize(),
+      animator: this.animator.serialize(),
+      scriptNames: this.scriptNames,
+      platformerPlayerController: this.platformerPlayerController.serialize(),
+      topDownPlayerController: this.topDownPlayerController.serialize()
+    };
   }
 }
 
@@ -532,8 +582,8 @@ class Camera {
     
 
     // Calculate the camera's position based on the object position
-    this.targetX = this.objectToFollow.Transform.Position.x - this.screenWidth / 2;
-    this.targetY = this.objectToFollow.Transform.Position.y - this.screenHeight / 2;
+    this.targetX = this.objectToFollow.transform.Position.x - this.screenWidth / 2;
+    this.targetY = this.objectToFollow.transform.Position.y - this.screenHeight / 2;
     
     const scaleFactor = Math.min(globalP5.width / 2560, globalP5.height / 1440);
 
@@ -579,15 +629,15 @@ class SpriteRenderer {
    * Updates the game object's visual representation based on its properties.
    */
   update(){ 
-    const angleInDegrees = this.gameObject.Transform.Rotation 
+    const angleInDegrees = this.gameObject.transform.Rotation 
     globalP5.push();
     
     if (typeof this.img !== "string"){
-        globalP5.translate(this.gameObject.Transform.Position.x + this.imageOffset.x , this.gameObject.Transform.Position.y + this.imageOffset.y)
+        globalP5.translate(this.gameObject.transform.Position.x + this.imageOffset.x , this.gameObject.transform.Position.y + this.imageOffset.y)
         }
     
     else{
-        globalP5.translate(this.gameObject.Transform.Position.x + this.imageOffset.x, this.gameObject.Transform.Position.y + this.imageOffset.y)
+        globalP5.translate(this.gameObject.transform.Position.x + this.imageOffset.x, this.gameObject.transform.Position.y + this.imageOffset.y)
         }
     
     
@@ -648,6 +698,44 @@ class SpriteRenderer {
     
     globalP5.pop();
   }
+
+  serialize(){
+    return {
+      "img": this.img,
+      imgSize: this.imgSize,
+      spriteColor: this.spriteColor,
+      imageOffset: this.imageOffset,
+      flip: this.flip,
+      glow: this.glow,
+      glowColor: this.glowColor
+    };
+  }
+
+  static deserialize(gameObject, {img, imgSize, spriteColor, imageOffset, flip, glow, glowColor}){
+    return new SpriteRenderer(gameObject, img, imgSize, spriteColor, imageOffset, flip, glow, glowColor);
+  }
+}
+
+
+class Transform{
+  constructor(Position, Rotation, Scale){
+    this.Position = Position;
+    this.Rotation = Rotation;
+    this.Scale = Scale;
+  }
+
+  serialize(){
+    return {
+      Position: this.Position,
+      Rotation: this.Rotation,
+      Scale: this.Scale
+    };
+  }
+  
+
+  static deserialize({Position, Rotation, Scale}){
+    return new Transform(Position, Rotation, Scale);
+  }
 }
 
 class RigidBody {
@@ -682,8 +770,7 @@ class RigidBody {
     
     if (globalP5.abs(this.Velocity.mag()) < this.maxSpeed){
         this.Velocity.add(this.acceleration.copy())
-      } 
-    
+    } 
   }
   
   /**
@@ -727,11 +814,25 @@ class RigidBody {
     
     this.applyDrag(this.drag);
     this.applyGravity();
-    this.gameObject.Transform.Position.add(this.Velocity.copy());
+    this.gameObject.transform.Position.add(this.Velocity.copy());
     
     
       
-    }
+  }
+
+  serialize(){
+    return {
+      mass: this.mass,
+      bounce: this.bounce,
+      drag: this.drag,
+      gravityScale: this.gravityScale,
+      maxSpeed: this.maxSpeed
+    };
+  }
+
+  static deserialize(gameObject, {mass, bounce, drag, gravityScale, maxSpeed}){
+    return new RigidBody(gameObject, mass, bounce, drag, gravityScale, maxSpeed);
+  }
 }
 
 
@@ -824,7 +925,19 @@ class TopDownPlayerController{
         //this.rigidBody.gameObject.animator.flip = true;
                }
       }
-    
+  }
+
+  serialize(){
+    return {
+      accelerationScale: this.accelerationScale,
+      deccelerationScale: this.deccelerationScale,
+      maxSpeed: this.maxSpeed,
+      horizontalBias: this.horizontalBias
+    };
+  }
+
+  static deserialize(rigidBody, {accelerationScale, deccelerationScale, maxSpeed, horizontalBias}){
+    return new TopDownPlayerController(rigidBody, accelerationScale, deccelerationScale, maxSpeed, horizontalBias);
   }
 }
 
@@ -894,11 +1007,11 @@ class PlatformerPlayerController{
     if (this.rigidBody.gameObject.gameEngine.inputSystem.getInputDown('TimeWarp')){
       
       if (this.timeWarpLocation === null){
-        this.timeWarpLocation = this.rigidBody.gameObject.Transform.Position.copy()
+        this.timeWarpLocation = this.rigidBody.gameObject.transform.Position.copy()
           } 
       
       else{
-        this.rigidBody.gameObject.Transform.Position = this.timeWarpLocation
+        this.rigidBody.gameObject.transform.Position = this.timeWarpLocation
         this.timeWarpLocation = null;
       }
         
@@ -938,6 +1051,20 @@ class PlatformerPlayerController{
        this.rigidBody.gameObject.spriteRenderer.flip = true
        }
     
+  }
+
+  serialize(){
+    return {
+      accelerationScale: this.accelerationScale,
+      deccelerationScale: this.deccelerationScale,
+      maxSpeed: this.maxSpeed,
+      jumpPower: this.jumpPower,
+      airControl: this.airControl
+    };
+  }
+
+  static deserialize(rigidBody, {accelerationScale, deccelerationScale, maxSpeed, jumpPower, airControl}){
+    return new PlatformerPlayerController(rigidBody, accelerationScale, deccelerationScale, maxSpeed, jumpPower, airControl);
   }
 }
 
@@ -983,7 +1110,29 @@ class Animation{
     
   }
   
-  
+  serialize(){
+    return {
+      "spriteSheet": this.spriteSheet,
+      frameHeight: this.frameHeight,
+      frameWidth: this.frameWidth,
+      rotation: this.rotation,
+      numOfFrames: this.numOfFrames,
+      size: this.size,
+      frames: this.frames,
+      speed: this.speed,
+      flipAxisOffset: this.flipAxisOffset,
+      animationOffset: this.animationOffset
+    };
+  }
+
+  static deserialize({spriteSheet, frameHeight, frameWidth, rotation, numOfFrames, size, frames, speed, flipAxisOffset, animationOffset}){
+    const animation = new Animation(spriteSheet, numOfFrames, size, speed, rotation);
+    animation.frames = frames;
+    animation.flipAxisOffset = flipAxisOffset;
+    animation.animationOffset = animationOffset;
+
+    return animation;
+  }
   
 }
 
@@ -1083,7 +1232,7 @@ class Animator {
       
     this.animationOffset = this.currentAnimation.animationOffset;
       
-    globalP5.translate(this.gameObject.Transform.Position.x + this.animationOffset.x, this.gameObject.Transform.Position.y + this.animationOffset.y)
+    globalP5.translate(this.gameObject.transform.Position.x + this.animationOffset.x, this.gameObject.transform.Position.y + this.animationOffset.y)
       
     if (this.flip && this.flipVertical){
       globalP5.push();
@@ -1136,6 +1285,37 @@ class Animator {
     globalP5.pop();
     }
   }
+
+  serialize(){
+    return {
+      animations: this.animations.map((key) => animations[key].serialize()),
+      currentAnimation: this.currentAnimation,
+      finishCurrentAnim: this.finishCurrentAnim,
+      inTransition: this.inTransition,
+      currentFrame: this.currentFrame,
+      flip: this.flip,
+      flipVertical: this.flipVertical,
+      frameTime: this.frameTime,
+      loopCount: this.loopCount,
+      animationOffset: this.animationOffset
+    };
+  }
+
+  static deserialize(gameObject, {animations, currentAnimation, finishCurrentAnim, inTransition, currentFrame, flip, flipVertical, frameTime, loopCount, animationOffset}){
+    const animator = new Animator(gameObject);
+    animator.animations = animations.forEach((key, value) => {animations[key] = Animation.deserialize(value)});
+    animator.currentAnimation = currentAnimation;
+    animator.finishCurrentAnim = finishCurrentAnim;
+    animator.inTransition = inTransition;
+    animator.currentFrame = currentFrame;
+    animator.flip = flip;
+    animator.flipVertical = flipVertical;
+    animator.frameTime = frameTime;
+    animator.loopCount = loopCount;
+    animator.animationOffset = animationOffset;
+
+    return animator;
+  }
 }
 
 
@@ -1162,18 +1342,18 @@ class BoxCollider {
     
     this.collidingWith =[]
     
-    this.Transform = {};
-    this.Transform.Position = this.gameObject.Transform.Position.copy().add(this.colliderOffset);
+    this.transform = {};
+    this.transform.Position = this.gameObject.transform.Position.copy().add(this.colliderOffset);
     
-    this.topLeft = this.Transform.Position;
-    this.topRight = globalP5.createVector(this.Transform.Position.x + colliderSize.x, this.Transform.Position.y);
-    this.bottomLeft = globalP5.createVector(this.Transform.Position.x, this.Transform.Position.y  + colliderSize.y);
-    this.bottomRight = globalP5.createVector(this.Transform.Position.x + colliderSize.x, this.Transform.Position.y + colliderSize.y);
+    this.topLeft = this.transform.Position;
+    this.topRight = globalP5.createVector(this.transform.Position.x + colliderSize.x, this.transform.Position.y);
+    this.bottomLeft = globalP5.createVector(this.transform.Position.x, this.transform.Position.y  + colliderSize.y);
+    this.bottomRight = globalP5.createVector(this.transform.Position.x + colliderSize.x, this.transform.Position.y + colliderSize.y);
     
-    this.midLeft = globalP5.createVector(this.Transform.Position.x, this.Transform.Position.y  + colliderSize.y / 2);
-    this.midRight = globalP5.createVector(this.Transform.Position.x + colliderSize.x, this.Transform.Position.y + colliderSize.y /2);
-    this.midTop = globalP5.createVector(this.Transform.Position.x + colliderSize.x / 2, this.Transform.Position.y);
-    this.midBottom = globalP5.createVector(this.Transform.Position.x + colliderSize.x / 2, this.Transform.Position.y + colliderSize.y);
+    this.midLeft = globalP5.createVector(this.transform.Position.x, this.transform.Position.y  + colliderSize.y / 2);
+    this.midRight = globalP5.createVector(this.transform.Position.x + colliderSize.x, this.transform.Position.y + colliderSize.y /2);
+    this.midTop = globalP5.createVector(this.transform.Position.x + colliderSize.x / 2, this.transform.Position.y);
+    this.midBottom = globalP5.createVector(this.transform.Position.x + colliderSize.x / 2, this.transform.Position.y + colliderSize.y);
     
   }
   
@@ -1206,7 +1386,7 @@ class BoxCollider {
     globalP5.noFill()
     globalP5.strokeWeight(2);
     globalP5.stroke(0, 0, 255);
-    globalP5.rect(this.Transform.Position.x, this.Transform.Position.y, this.colliderSize.x, this.colliderSize.y)
+    globalP5.rect(this.transform.Position.x, this.transform.Position.y, this.colliderSize.x, this.colliderSize.y)
     globalP5.fill("white")
     globalP5.noStroke()
   }
@@ -1215,17 +1395,35 @@ class BoxCollider {
    * Updates the position and calculates the corner and mid points of the collider.
    */
   update(){
-    this.Transform.Position = this.gameObject.Transform.Position.copy().add(this.colliderOffset)
+    this.transform.Position = this.gameObject.transform.Position.copy().add(this.colliderOffset)
     
-    this.topLeft = this.Transform.Position;
-    this.topRight = globalP5.createVector(this.Transform.Position.x + this.colliderSize.x, this.Transform.Position.y);
-    this.bottomLeft = globalP5.createVector(this.Transform.Position.x, this.Transform.Position.y  + this.colliderSize.y);
-    this.bottomRight = globalP5.createVector(this.Transform.Position.x + this.colliderSize.x, this.Transform.Position.y + this.colliderSize.y);
+    this.topLeft = this.transform.Position;
+    this.topRight = globalP5.createVector(this.transform.Position.x + this.colliderSize.x, this.transform.Position.y);
+    this.bottomLeft = globalP5.createVector(this.transform.Position.x, this.transform.Position.y  + this.colliderSize.y);
+    this.bottomRight = globalP5.createVector(this.transform.Position.x + this.colliderSize.x, this.transform.Position.y + this.colliderSize.y);
     
-    this.midLeft = globalP5.createVector(this.Transform.Position.x, this.Transform.Position.y  + this.colliderSize.y / 2);
-    this.midRight = globalP5.createVector(this.Transform.Position.x + this.colliderSize.x, this.Transform.Position.y + this.colliderSize.y /2);
-    this.midTop = globalP5.createVector(this.Transform.Position.x + this.colliderSize.x / 2, this.Transform.Position.y);
-    this.midBottom = globalP5.createVector(this.Transform.Position.x + this.colliderSize.x / 2, this.Transform.Position.y + this.colliderSize.y);
+    this.midLeft = globalP5.createVector(this.transform.Position.x, this.transform.Position.y  + this.colliderSize.y / 2);
+    this.midRight = globalP5.createVector(this.transform.Position.x + this.colliderSize.x, this.transform.Position.y + this.colliderSize.y /2);
+    this.midTop = globalP5.createVector(this.transform.Position.x + this.colliderSize.x / 2, this.transform.Position.y);
+    this.midBottom = globalP5.createVector(this.transform.Position.x + this.colliderSize.x / 2, this.transform.Position.y + this.colliderSize.y);
+  }
+
+  serialize(){
+    return {
+      colliderSize: this.colliderSize,
+      isTrigger: this.isTrigger,
+      isContinuous: this.isContinuous,
+      colliderOffset: this.colliderOffset,
+      colliderType: this.colliderType,
+      colliderTags: this.colliderTags
+    };
+  }
+
+  static deserialize(gameObject, {colliderSize, isTrigger, isContinuous, colliderOffset, colliderTags, colliderType}){
+    const collider = new BoxCollider(gameObject, colliderSize, isTrigger, isContinuous, colliderOffset);
+    collider.colliderTags = colliderTags;
+    collider.colliderType = colliderType;
+    return collider;
   }
 }
 
@@ -1249,10 +1447,10 @@ class CircleCollider {
     
     this.colliderTags = []
     
-    this.Transform = {};
+    this.transform = {};
     this.collidingWith = []
     
-    this.Transform.Position = this.gameObject.Transform.Position.copy().add(this.colliderOffset)
+    this.transform.Position = this.gameObject.transform.Position.copy().add(this.colliderOffset)
   }
   
   /**
@@ -1285,7 +1483,7 @@ class CircleCollider {
     globalP5.strokeWeight(2);
     globalP5.stroke(255, 0, 0);
     globalP5.noFill()
-    globalP5.circle(this.gameObject.Transform.Position.x + this.colliderOffset.x, this.gameObject.Transform.Position.y + this.colliderOffset.y, this.colliderRadius*2)
+    globalP5.circle(this.gameObject.transform.Position.x + this.colliderOffset.x, this.gameObject.transform.Position.y + this.colliderOffset.y, this.colliderRadius*2)
     globalP5.fill("white")
     globalP5.noStroke()
   }
@@ -1294,7 +1492,25 @@ class CircleCollider {
    * Updates the object's position based on the collider offset.
    */
   update(){
-    this.Transform.Position = this.gameObject.Transform.Position.copy().add(this.colliderOffset)
+    this.transform.Position = this.gameObject.transform.Position.copy().add(this.colliderOffset)
+  }
+
+  serialize(){
+    return {
+      colliderRadius: this.colliderRadius,
+      isTrigger: this.isTrigger,
+      isContinuous: this.isContinuous,
+      colliderOffset: this.colliderOffset,
+      colliderType: this.colliderType,
+      colliderTags: this.colliderTags
+    };
+  }
+
+  static deserialize(gameObject, {colliderRadius, isTrigger, isContinuous, colliderOffset, colliderTags, colliderType}){
+    const collider = new CircleCollider(gameObject, colliderRadius, isTrigger, isContinuous, colliderOffset);
+    collider.colliderTags = colliderTags;
+    collider.colliderType = colliderType;
+    return collider;
   }
 
 }
@@ -1525,7 +1741,7 @@ class ParticleEmitter{
       let position = this.pos.copy()
 
       if(this.followObject !== null){
-        position = this.followObject.Transform.Position.copy().add(this.followObjectOffset);
+        position = this.followObject.transform.Position.copy().add(this.followObjectOffset);
       }
 
       let particle = new Particle(this.particleSystem.particles[this.particleName].lifeSpan, this.particleSystem.particles[this.particleName].color, this.particleSystem.particles[this.particleName].opacity, this.particleSystem.particles[this.particleName].shouldFade, this.particleSystem.particles[this.particleName].shape, this.particleSystem.particles[this.particleName].sizeRange, this.particleSystem.particles[this.particleName].hasGravity, this.particleSystem.particles[this.particleName].gravityScale, this.particleSystem.particles[this.particleName].hasWind, this.particleSystem.particles[this.particleName].windScale, this.particleSystem.particles[this.particleName].windDirection, this.particleSystem.particles[this.particleName].glow);
@@ -1955,22 +2171,22 @@ class GameEngine {
 
         let continuousCheckCircle1;
         if (collider1.gameObject.rigidBody !== null && collider1.isContinuous){
-          continuousCheckCircle1 = this.intersectSphere(p5.Vector.add(collider1.Transform.Position, p5.Vector.normalize((collider2.Transform.Position.copy().sub(collider1.Transform.Position))).mult(collider1.colliderRadius)), collider1.gameObject.rigidBody.Velocity, collider2.Transform.Position, collider2.colliderRadius)
+          continuousCheckCircle1 = this.intersectSphere(p5.Vector.add(collider1.transform.Position, p5.Vector.normalize((collider2.transform.Position.copy().sub(collider1.transform.Position))).mult(collider1.colliderRadius)), collider1.gameObject.rigidBody.Velocity, collider2.transform.Position, collider2.colliderRadius)
         }
 
         let continuousCheckCircle2;
         if (collider2.gameObject.rigidBody !== null && collider2.isContinuous){
-          continuousCheckCircle2 = this.intersectSphere(p5.Vector.add(collider2.Transform.Position, p5.Vector.normalize((collider1.Transform.Position.copy().sub(collider2.Transform.Position))).mult(collider2.colliderRadius)), collider2.gameObject.rigidBody.Velocity, collider1.Transform.Position, collider1.colliderRadius)
+          continuousCheckCircle2 = this.intersectSphere(p5.Vector.add(collider2.transform.Position, p5.Vector.normalize((collider1.transform.Position.copy().sub(collider2.transform.Position))).mult(collider2.colliderRadius)), collider2.gameObject.rigidBody.Velocity, collider1.transform.Position, collider1.colliderRadius)
         }
 
 
 
         const minDistance = collider1.colliderRadius + collider2.colliderRadius;
         const distanceBetweenCenters = globalP5.dist(
-                collider1.Transform.Position.x,
-                collider1.Transform.Position.y,
-                collider2.Transform.Position.x,
-                collider2.Transform.Position.y
+                collider1.transform.Position.x,
+                collider1.transform.Position.y,
+                collider2.transform.Position.x,
+                collider2.transform.Position.y
               );
         
         
@@ -1981,7 +2197,7 @@ class GameEngine {
           collider1.collidingWith.push(collider2)
           collider2.collidingWith.push(collider1)  
             if (collider1.isTrigger === false && collider2.isTrigger === false){
-                const collisionNormal = p5.Vector.sub(collider1.Transform.Position.copy(), collider2.Transform.Position.copy()).normalize();
+                const collisionNormal = p5.Vector.sub(collider1.transform.Position.copy(), collider2.transform.Position.copy()).normalize();
                 this.resolveCircleToCircleCollision(collider1.gameObject.rigidBody, collider2.gameObject.rigidBody, collisionNormal, distanceBetweenCenters, minDistance);
                  
                 
@@ -1994,8 +2210,8 @@ class GameEngine {
     
       else if (collider1.colliderType === "circle" && collider2.colliderType === "rect"){
 
-          let nearestX = globalP5.constrain(collider1.Transform.Position.x, collider2.Transform.Position.x, collider2.bottomRight.x)
-          let nearestY = globalP5.constrain(collider1.Transform.Position.y, collider2.Transform.Position.y, collider2.bottomRight.y)
+          let nearestX = globalP5.constrain(collider1.transform.Position.x, collider2.transform.Position.x, collider2.bottomRight.x)
+          let nearestY = globalP5.constrain(collider1.transform.Position.y, collider2.transform.Position.y, collider2.bottomRight.y)
           let closestPoint = globalP5.createVector(nearestX, nearestY)
 
           
@@ -2008,18 +2224,18 @@ class GameEngine {
           
 
           if (collider1.gameObject.rigidBody !== null && collider1.isContinuous){
-            let direction = globalP5.createVector(closestPoint.x - collider1.Transform.Position.x ,  closestPoint.y - collider1.Transform.Position.y).normalize();
-            let closestPointOnCircle = collider1.Transform.Position.copy().add(direction.mult(collider1.colliderRadius));
+            let direction = globalP5.createVector(closestPoint.x - collider1.transform.Position.x ,  closestPoint.y - collider1.transform.Position.y).normalize();
+            let closestPointOnCircle = collider1.transform.Position.copy().add(direction.mult(collider1.colliderRadius));
 
-            continuousCheckRect = this.intersectRect(closestPointOnCircle, collider1.gameObject.rigidBody.Velocity, collider2.Transform.Position, collider2.Transform.Position.copy().add(collider2.colliderSize))
+            continuousCheckRect = this.intersectRect(closestPointOnCircle, collider1.gameObject.rigidBody.Velocity, collider2.transform.Position, collider2.transform.Position.copy().add(collider2.colliderSize))
           }
           
           
           if (collider2.gameObject.rigidBody !== null && collider2.isContinuous){
-            continuousCheckCircle = this.intersectSphere(closestPoint, collider2.gameObject.rigidBody.Velocity, collider1.Transform.Position, collider1.colliderRadius)
+            continuousCheckCircle = this.intersectSphere(closestPoint, collider2.gameObject.rigidBody.Velocity, collider1.transform.Position, collider1.colliderRadius)
           }
           
-          const distance = p5.Vector.sub(collider1.Transform.Position.copy(), closestPoint.copy())
+          const distance = p5.Vector.sub(collider1.transform.Position.copy(), closestPoint.copy())
           
           
           const collisionNormal = distance.copy().normalize()
@@ -2044,8 +2260,8 @@ class GameEngine {
     
       else if (collider1.colliderType === "rect" && collider2.colliderType === "circle"){
 
-          let nearestX = globalP5.constrain(collider2.Transform.Position.x, collider1.Transform.Position.x, collider1.bottomRight.x)
-          let nearestY = globalP5.constrain(collider2.Transform.Position.y, collider1.Transform.Position.y, collider1.bottomRight.y)
+          let nearestX = globalP5.constrain(collider2.transform.Position.x, collider1.transform.Position.x, collider1.bottomRight.x)
+          let nearestY = globalP5.constrain(collider2.transform.Position.y, collider1.transform.Position.y, collider1.bottomRight.y)
           let closestPoint = globalP5.createVector(nearestX, nearestY)
 
           let continuousCheckRect;
@@ -2055,18 +2271,18 @@ class GameEngine {
         
 
           if (collider2.gameObject.rigidBody !== null && collider2.isContinuous){
-            let direction = globalP5.createVector(closestPoint.x - collider2.Transform.Position.x, closestPoint.y - collider2.Transform.Position.y ).normalize();
-            let closestPointOnCircle = collider2.Transform.Position.copy().add(direction.mult(collider2.colliderRadius));
+            let direction = globalP5.createVector(closestPoint.x - collider2.transform.Position.x, closestPoint.y - collider2.transform.Position.y ).normalize();
+            let closestPointOnCircle = collider2.transform.Position.copy().add(direction.mult(collider2.colliderRadius));
 
-            continuousCheckRect = this.intersectRect(closestPointOnCircle, collider2.gameObject.rigidBody.Velocity, collider1.Transform.Position, collider1.Transform.Position.copy().add(collider1.colliderSize))
+            continuousCheckRect = this.intersectRect(closestPointOnCircle, collider2.gameObject.rigidBody.Velocity, collider1.transform.Position, collider1.transform.Position.copy().add(collider1.colliderSize))
             
           }
 
           if (collider1.gameObject.rigidBody !== null && collider1.isContinuous){
-            continuousCheckCircle = this.intersectSphere(closestPoint, collider1.gameObject.rigidBody.Velocity, collider2.Transform.Position, collider2.colliderRadius)
+            continuousCheckCircle = this.intersectSphere(closestPoint, collider1.gameObject.rigidBody.Velocity, collider2.transform.Position, collider2.colliderRadius)
           }
           
-          const distance = p5.Vector.sub(collider2.Transform.Position.copy(), closestPoint.copy())
+          const distance = p5.Vector.sub(collider2.transform.Position.copy(), closestPoint.copy())
           
           
           const collisionNormal = distance.copy().normalize()
@@ -2102,34 +2318,34 @@ class GameEngine {
         let continuousCheckRect1;
         let continuousCheckRect2;
         
-        let closestX1 = globalP5.constrain(collider2.Transform.Position.x + collider2.colliderSize.x / 2, collider1.Transform.Position.x, collider1.Transform.Position.x + collider1.colliderSize.x);
-        let closestY1 = globalP5.constrain(collider2.Transform.Position.y + collider2.colliderSize.y / 2, collider1.Transform.Position.y, collider1.Transform.Position.y + collider1.colliderSize.y);
+        let closestX1 = globalP5.constrain(collider2.transform.Position.x + collider2.colliderSize.x / 2, collider1.transform.Position.x, collider1.transform.Position.x + collider1.colliderSize.x);
+        let closestY1 = globalP5.constrain(collider2.transform.Position.y + collider2.colliderSize.y / 2, collider1.transform.Position.y, collider1.transform.Position.y + collider1.colliderSize.y);
         
-        let closestX2 = globalP5.constrain(collider1.Transform.Position.x + collider1.colliderSize.x / 2, collider2.Transform.Position.x, collider2.Transform.Position.x + collider2.colliderSize.x);
-        let closestY2 = globalP5.constrain(collider1.Transform.Position.y + collider1.colliderSize.y / 2, collider2.Transform.Position.y, collider2.Transform.Position.y + collider2.colliderSize.y);
+        let closestX2 = globalP5.constrain(collider1.transform.Position.x + collider1.colliderSize.x / 2, collider2.transform.Position.x, collider2.transform.Position.x + collider2.colliderSize.x);
+        let closestY2 = globalP5.constrain(collider1.transform.Position.y + collider1.colliderSize.y / 2, collider2.transform.Position.y, collider2.transform.Position.y + collider2.colliderSize.y);
        
        
         if (collider1.gameObject.rigidBody !== null && collider1.isContinuous){
-          continuousCheckRect1 = this.intersectRect(globalP5.createVector(closestX1, closestY1), collider1.gameObject.rigidBody.Velocity, collider2.Transform.Position, collider2.Transform.Position.copy().add(collider2.colliderSize))
+          continuousCheckRect1 = this.intersectRect(globalP5.createVector(closestX1, closestY1), collider1.gameObject.rigidBody.Velocity, collider2.transform.Position, collider2.transform.Position.copy().add(collider2.colliderSize))
         }
 
         if (collider2.gameObject.rigidBody !== null && collider2.isContinuous){
-          continuousCheckRect2 = this.intersectRect(globalP5.createVector(closestX2, closestY2), collider2.gameObject.rigidBody.Velocity, collider1.Transform.Position, collider1.Transform.Position.copy().add(collider1.colliderSize))
+          continuousCheckRect2 = this.intersectRect(globalP5.createVector(closestX2, closestY2), collider2.gameObject.rigidBody.Velocity, collider1.transform.Position, collider1.transform.Position.copy().add(collider1.colliderSize))
 
         }
 
         //AABB Collision Detection
        if (
-          collider1.Transform.Position.x < collider2.Transform.Position.x + collider2.colliderSize.x &&
-          collider1.Transform.Position.x + collider1.colliderSize.x > collider2.Transform.Position.x &&
-          collider1.Transform.Position.y < collider2.Transform.Position.y + collider2.colliderSize.y &&
-          collider1.Transform.Position.y + collider1.colliderSize.y > collider2.Transform.Position.y 
+          collider1.transform.Position.x < collider2.transform.Position.x + collider2.colliderSize.x &&
+          collider1.transform.Position.x + collider1.colliderSize.x > collider2.transform.Position.x &&
+          collider1.transform.Position.y < collider2.transform.Position.y + collider2.colliderSize.y &&
+          collider1.transform.Position.y + collider1.colliderSize.y > collider2.transform.Position.y 
           || continuousCheckRect1 || continuousCheckRect2
         ) {
 
-        const overlapX = globalP5.min(collider1.Transform.Position.x + collider1.colliderSize.x, collider2.Transform.Position.x + collider2.colliderSize.x) - globalP5.max(collider1.Transform.Position.x, collider2.Transform.Position.x);
+        const overlapX = globalP5.min(collider1.transform.Position.x + collider1.colliderSize.x, collider2.transform.Position.x + collider2.colliderSize.x) - globalP5.max(collider1.transform.Position.x, collider2.transform.Position.x);
 
-        const overlapY =globalP5. min(collider1.Transform.Position.y + collider1.colliderSize.y,collider2.Transform.Position.y + collider2.colliderSize.y) - globalP5.max(collider1.Transform.Position.y, collider2.Transform.Position.y);
+        const overlapY =globalP5. min(collider1.transform.Position.y + collider1.colliderSize.y,collider2.transform.Position.y + collider2.colliderSize.y) - globalP5.max(collider1.transform.Position.y, collider2.transform.Position.y);
 
         let collisionNormal = globalP5.createVector(0, 0);
         let overlap = 0
@@ -2137,11 +2353,11 @@ class GameEngine {
         
         if (overlapX < overlapY) {
           // X-axis collision
-          collisionNormal.x = (collider1.Transform.Position.x < collider2.Transform.Position.x) ? 1 : -1;
+          collisionNormal.x = (collider1.transform.Position.x < collider2.transform.Position.x) ? 1 : -1;
           overlap = overlapX;
         } else {
           // Y-axis collision
-          collisionNormal.y = (collider1.Transform.Position.y < collider2.Transform.Position.y) ? 1 : -1;
+          collisionNormal.y = (collider1.transform.Position.y < collider2.transform.Position.y) ? 1 : -1;
           overlap = overlapY;
         }
 
@@ -2383,8 +2599,8 @@ class GameEngine {
       const moveRatioRigidbody2 = 1 / (1 + MassToMassRatio);
 
     
-      rigidBody1.gameObject.Transform.Position.add(impulseDirection.copy().normalize().mult((minDistance - distanceBetweenCenters) * moveRatioRigidbody1 )); 
-      rigidBody2.gameObject.Transform.Position.sub(impulseDirection.copy().normalize().mult((minDistance - distanceBetweenCenters) * moveRatioRigidbody2) );
+      rigidBody1.gameObject.transform.Position.add(impulseDirection.copy().normalize().mult((minDistance - distanceBetweenCenters) * moveRatioRigidbody1 )); 
+      rigidBody2.gameObject.transform.Position.sub(impulseDirection.copy().normalize().mult((minDistance - distanceBetweenCenters) * moveRatioRigidbody2) );
       
     
       rigidBody1.addForce(impulseDirection.copy(), impulseMagnitude);
@@ -2427,8 +2643,8 @@ class GameEngine {
       
     
     // Update the positions with the adjusted values
-    rigidBody1.gameObject.Transform.Position.add(p5.Vector.mult(impulseDirection.copy().normalize(), overlap * moveRatioRigidbody1));
-    rigidBody2.gameObject.Transform.Position.sub(p5.Vector.mult(impulseDirection.copy().normalize(), overlap * moveRatioRigidbody2));
+    rigidBody1.gameObject.transform.Position.add(p5.Vector.mult(impulseDirection.copy().normalize(), overlap * moveRatioRigidbody1));
+    rigidBody2.gameObject.transform.Position.sub(p5.Vector.mult(impulseDirection.copy().normalize(), overlap * moveRatioRigidbody2));
 
     
       
@@ -2587,7 +2803,7 @@ class GameEngine {
     
     if (this.cull){
       gameObjectValues = Object.values(gameObjects)
-      this.culledObjects = this.cullObjects(this.cullingRange, this.cullingObject.Transform.Position, gameObjectValues)
+      this.culledObjects = this.cullObjects(this.cullingRange, this.cullingObject.transform.Position, gameObjectValues)
       gameObjectValues = this.culledObjects;
       
     }
@@ -2710,10 +2926,10 @@ export class MonoBehaviour {
    */
   static cameraToMouseAngle(camera, screenWidth, screenHeight){
     const directionVector = p5.Vector.sub(globalP5.createVector(globalP5.mouseX, globalP5.mouseY), globalP5.createVector(screenWidth / 2 + camera.cameraOffset.x, screenHeight / 2 + camera.cameraOffset.y));
-    const directionNormal = p5.Vector.normalize(directionVector)
+    const directionNormal = p5.Vector.normalize(directionVector);
   
     const angle = Math.atan2(directionNormal.x, directionNormal.y) * 180 / Math.PI;
-    return angle
+    return angle;
   }
 
 
@@ -2727,9 +2943,9 @@ export class MonoBehaviour {
    */
   static cameraToMouseDirection(camera, screenWidth, screenHeight){
     const directionVector = p5.Vector.sub(globalP5.createVector(globalP5.mouseX, globalP5.mouseY), globalP5.createVector(screenWidth / 2 + camera.cameraOffset.x, screenHeight / 2 + camera.cameraOffset.y));
-    const directionNormal = p5.Vector.normalize(directionVector)
+    const directionNormal = p5.Vector.normalize(directionVector);
   
-    return directionNormal
+    return directionNormal;
   }
 
   static GameObject = GameObject;
