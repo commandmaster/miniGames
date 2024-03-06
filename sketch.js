@@ -648,7 +648,6 @@ class SpriteRenderer {
     
     globalP5.noStroke()
     if (typeof this.img !== "string"){
-      
        if (this.flip){
            globalP5.push()
            globalP5.scale(-1, 1)
@@ -1083,8 +1082,15 @@ class Animation{
    * @param {number} rotation - The rotation angle of the sprite. (optional)
    */
   constructor(spriteSheetImg, numOfFrames, size=1, speed=10, rotation=0){
-    
-    this.spriteSheet = spriteSheetImg;
+    if (typeof spriteSheetImg === "string"){
+      this.spriteSheet = globalP5.loadImage(spriteSheetImg);
+      this.spriteSheetName = spriteSheetImg;
+    }
+
+    else{
+      this.spriteSheet = spriteSheetImg;
+      this.spriteSheetName = null;
+    }
     
     this.frameHeight =  spriteSheetImg.height;
     this.frameWidth = spriteSheetImg.width / numOfFrames;
@@ -1117,7 +1123,7 @@ class Animation{
   
   serialize(){
     return {
-      "spriteSheet": this.spriteSheet,
+      "spriteSheetName": this.spriteSheetName,
       frameHeight: this.frameHeight,
       frameWidth: this.frameWidth,
       rotation: this.rotation,
@@ -1130,8 +1136,8 @@ class Animation{
     };
   }
 
-  static deserialize({spriteSheet, frameHeight, frameWidth, rotation, numOfFrames, size, frames, speed, flipAxisOffset, animationOffset}){
-    const animation = new Animation(spriteSheet, numOfFrames, size, speed, rotation);
+  static deserialize({spriteSheetName, frameHeight, frameWidth, rotation, numOfFrames, size, frames, speed, flipAxisOffset, animationOffset}){
+    const animation = new Animation(spriteSheetName, numOfFrames, size, speed, rotation);
     animation.frames = frames;
     animation.flipAxisOffset = flipAxisOffset;
     animation.animationOffset = animationOffset;
@@ -2155,7 +2161,7 @@ class GameEngine {
       gameObjects.push(object.serialize());
     }
 
-    if (globalP5.getItem("engineGameData") !== undefined){
+    if (globalP5.getItem("engineGameData") !== null){
       let data = globalP5.getItem("engineGameData");
 
       if (data.gameData.levels[this.currentLevel] === undefined){
