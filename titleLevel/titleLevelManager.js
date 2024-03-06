@@ -8,31 +8,6 @@ export default class TitleLevelManager{
     }
 
     Start(){
-        // Title Screen setup
-        this.gameEngine.resizeToFit = false; // Disable automatic canvas resizing
-        this.gameEngine.setCanvasHeight(1440); // Set canvas height to 1440 pixels
-        this.gameEngine.setCanvasWidth(2560); // Set canvas width to 2560 pixels
-
-        // Create main title object
-        let mainTitle = new MonoBehaviour.GameObject(this.gameEngine, this.p5.createVector(this.gameEngine.screenWidth / 2, 100), "mainTitle");
-        mainTitle.addSpriteRenderer(this.gameEngine.imageSystem.getImage("mainTitle"), this.p5.createVector(1000, 300));
-        mainTitle.ignoreCulling = true;
-
-        // Create Molten title object
-        let moltenTitle = new MonoBehaviour.GameObject(this.gameEngine, this.p5.createVector(200,400), "MoltenTitle");
-        moltenTitle.addSpriteRenderer(this.gameEngine.imageSystem.getImage("MoltenLogo"), this.p5.createVector(400, 400));
-        moltenTitle.ignoreCulling = true;
-
-        // Create Flappy Bird title object
-        let flappyBirdTitle = new MonoBehaviour.GameObject(this.gameEngine, this.p5.createVector(1000,400), "FlappyBirdTitle");
-        flappyBirdTitle.addSpriteRenderer(this.gameEngine.imageSystem.getImage("flappyBirdLogo"), this.p5.createVector(400, 400));
-        flappyBirdTitle.ignoreCulling = true;
-
-        // Create Snake Game title object
-        let snakeGameTitle = new MonoBehaviour.GameObject(this.gameEngine, this.p5.createVector(200, 1000), "SnakeGameTitle");
-        snakeGameTitle.addSpriteRenderer(this.gameEngine.imageSystem.getImage("snakeGameLogo"), this.p5.createVector(400, 400));
-        snakeGameTitle.ignoreCulling = true;
-
         // Create Molten button
         this.moltenBtn = this.p5.createButton("")
         this.moltenBtn.position(0, 200);
@@ -73,10 +48,10 @@ export default class TitleLevelManager{
         });
 
         // Add title objects to the level
-        this.gameEngine.addObjectsToLevel(this.levelName, [moltenTitle, mainTitle, flappyBirdTitle, snakeGameTitle]);
+        // this.gameEngine.addObjectsToLevel(this.levelName, [moltenTitle, mainTitle, flappyBirdTitle, snakeGameTitle]);
         this.gameEngine.addCameraToLevel(this.levelName, null);
 
-        
+        this.gameEngine.saveCurrentLevel();
     }
 
     Update(){

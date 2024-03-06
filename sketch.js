@@ -71,7 +71,6 @@ class GameObject {
    */
   
   constructor(gameEngine, initPos=globalP5.createVector(0,0), name=null, levelName=null) {
-
     this.transform = new Transform(initPos, 0, globalP5.createVector(1,1));
     
     this.gameEngine = gameEngine;
@@ -338,12 +337,12 @@ class GameObject {
     gameObject.name = name;
     gameObject.tags = tags;
     gameObject.ignoreCulling = ignoreCulling;
-    gameObject.spriteRenderer = SpriteRenderer.deserialize(gameObject, spriteRenderer);
-    gameObject.rigidBody = RigidBody.deserialize(gameObject, rigidBody);
-    gameObject.animator = Animator.deserialize(gameObject, animator);
+    gameObject.spriteRenderer = spriteRenderer !== null ? SpriteRenderer.deserialize(gameObject, spriteRenderer) : null;
+    gameObject.rigidBody = rigidBody !== null ? RigidBody.deserialize(gameObject, rigidBody) : null;
+    gameObject.animator = animator !== null ? Animator.deserialize(gameObject, animator) : null;
     gameObject.scriptNames = scriptNames;
-    gameObject.platformerPlayerController = PlatformerPlayerController.deserialize(gameObject.rigidBody, platformerPlayerController);
-    gameObject.topDownPlayerController = TopDownPlayerController.deserialize(gameObject.rigidBody, topDownPlayerController);
+    gameObject.platformerPlayerController = platformerPlayerController !== null ? PlatformerPlayerController.deserialize(gameObject.rigidBody, platformerPlayerController) : null;
+    gameObject.topDownPlayerController = topDownPlayerController !== null ? TopDownPlayerController.deserialize(gameObject.rigidBody, topDownPlayerController) : null;
 
     for (const collider of colliders){
       if (collider.colliderType === "rect"){
@@ -622,6 +621,8 @@ class SpriteRenderer {
     this.flip = true
     this.glow = glow;
     this.glowColor = glowColor;
+
+    this.imgName = null;
   }
   
   
@@ -701,7 +702,7 @@ class SpriteRenderer {
 
   serialize(){
     return {
-      "img": this.img,
+      "imgName": this.imgName,
       imgSize: this.imgSize,
       spriteColor: this.spriteColor,
       imageOffset: this.imageOffset,
@@ -711,8 +712,12 @@ class SpriteRenderer {
     };
   }
 
-  static deserialize(gameObject, {img, imgSize, spriteColor, imageOffset, flip, glow, glowColor}){
-    return new SpriteRenderer(gameObject, img, imgSize, spriteColor, imageOffset, flip, glow, glowColor);
+  static deserialize(gameObject, {imgName, imgSize, spriteColor, imageOffset, flip, glow, glowColor}){
+    const img = gameObject.gameEngine.imageSystem.getImage(imgName);
+    const spriteRenderer = new SpriteRenderer(gameObject, img, imgSize, spriteColor, imageOffset, flip, glow, glowColor);
+    spriteRenderer.imgName = imgName;
+
+    return spriteRenderer;
   }
 }
 
@@ -1130,6 +1135,8 @@ class Animation{
     animation.frames = frames;
     animation.flipAxisOffset = flipAxisOffset;
     animation.animationOffset = animationOffset;
+    animation.frameHeight = frameHeight;
+    animation.frameWidth = frameWidth;
 
     return animation;
   }
@@ -1911,6 +1918,7 @@ class ParticleSystem{
 
 
 
+
 class GameEngine {
   /**
    * Creates a new instance of the class.
@@ -2078,27 +2086,61 @@ class GameEngine {
   loadLevel(levelName, levelManagerScriptName){
     this.backgroundImage = null;
     this.backgroundSize = null;
-  
+    
+    globalP5.loadJSON("/gameData.json", (data) => {
+      const levelData = data.gameData.levels[levelName];
 
-    if (this.currentLevelScript !== null){
-      try{
-        this.currentLevelScript.End();
+      this.currentLevel = levelName;
+      this.currentLevelObjects = {};
+      this.cull = false;
+
+
+      if (levelData !== undefined){
+        const gameObjectsJson = levelData.gameObjects;
+        
+        const gameObjects = [];
+        for (const object of gameObjectsJson){
+          gameObjects.push(GameObject.deserialize(this, object));
+        }
+
+        this.addObjectsToLevel(levelName, gameObjects);
       }
-      catch (e){
-        console.log(e);
+
+     
+    
+
+      if (this.currentLevelScript !== null){
+        try{
+          this.currentLevelScript.End();
+        }
+        catch (err){
+          console.log(err);
+        }
+        
       }
+  
       
+  
+      const script = this.scriptSystem.getScript(levelManagerScriptName);
+      const scriptInstance = new script.default(globalP5, this, levelName);
+      this.currentLevelScript = scriptInstance;
+      
+      this.currentLevelScript.Start();
+    });
+  }
+
+  saveCurrentLevel(){
+    console.log(this.currentLevelObjects)
+    const gameObjects = [];
+    for (const object of Object.values(this.currentLevelObjects)){
+      gameObjects.push(object.serialize());
     }
 
-    this.currentLevel = levelName;
-    this.currentLevelObjects = {};
-    this.cull = false;
-
-    const script = this.scriptSystem.getScript(levelManagerScriptName);
-    const scriptInstance = new script.default(globalP5, this, levelName);
-    this.currentLevelScript = scriptInstance;
+    globalP5.loadJSON("/gameData.json", (data) => {
+      data.gameData.levels[this.currentLevel].gameObjects = gameObjects;
+      globalP5.saveJSON(data, "/gameData.json");
+    });
     
-    this.currentLevelScript.Start();
   }
 
   /**
@@ -2969,7 +3011,7 @@ window.addEventListener('load', (event) => {
   console.log('Webpage fully loaded');
 
 
-  sketch = new p5(game);
+  let sketch = new p5(game);
 
   //There is a p5 js instance mode bug that causes setup to try and run before the webpage will load and this prevents that from happening
 });
