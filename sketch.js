@@ -368,13 +368,13 @@ class GameObject {
       name: this.name,
       tags: this.tags,
       ignoreCulling: this.ignoreCulling,
-      colliders: this.colliders.forEach(collider => collider.serialize()),
-      spriteRenderer: this.spriteRenderer.serialize(),
-      rigidBody: this.rigidBody.serialize(),
-      animator: this.animator.serialize(),
+      colliders: this.colliders.map(collider => collider.serialize()),
+      spriteRenderer: this.spriteRenderer === null ? null : this.spriteRenderer.serialize(),
+      rigidBody: this.rigidBody === null ? null : this.rigidBody.serialize(),
+      animator: this.animator === null ? null : this.animator.serialize(),
       scriptNames: this.scriptNames,
-      platformerPlayerController: this.platformerPlayerController.serialize(),
-      topDownPlayerController: this.topDownPlayerController.serialize()
+      platformerPlayerController: this.platformerPlayerController === null ? null : this.platformerPlayerController.serialize(),
+      topDownPlayerController: this.topDownPlayerController === null ? null : this.topDownPlayerController.serialize()
     };
   }
 }
