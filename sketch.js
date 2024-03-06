@@ -2247,7 +2247,6 @@ class GameEngine {
          return; 
       }
       
-    
       if (collider1.colliderType === "circle" && collider2.colliderType === "circle"){
 
         let continuousCheckCircle1;
