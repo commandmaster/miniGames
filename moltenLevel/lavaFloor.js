@@ -16,8 +16,6 @@ export default class LavaFloor{
 
         });
 
-        console.log(this.gameObject)
-        console.log(this.gameObject.serialize());
     }
 
     Update(){
