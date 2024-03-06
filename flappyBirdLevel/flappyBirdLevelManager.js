@@ -147,7 +147,7 @@ export default class FlappyBirdLevelManager{
 
             // Event handler for back to menu button click
             this.backToMenuBtn.mousePressed(() => {
-                this.gameEngine.loadLevel("title", "titleLevelManager");
+                this.gameEngine.loadLevel("titleScreen", "titleLevelManager");
             });
         });
     }

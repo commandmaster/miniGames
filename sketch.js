@@ -2086,15 +2086,23 @@ class GameEngine {
   loadLevel(levelName, levelManagerScriptName){
     this.backgroundImage = null;
     this.backgroundSize = null;
+
+    
     
     globalP5.loadJSON("/gameData.json", (data) => {
-      const levelData = data.gameData.levels[levelName];
+      let levelData = data.gameData.levels[levelName];
+      if (globalP5.getItem("engineGameData")){
+        if (globalP5.getItem("engineGameData").gameData.levels[levelName]){
+          levelData = globalP5.getItem("engineGameData").gameData.levels[levelName];
+        }
+      }
+
 
       this.currentLevel = levelName;
       this.currentLevelObjects = {};
       this.cull = false;
 
-
+      
       if (levelData !== undefined){
         const gameObjectsJson = levelData.gameObjects;
         
@@ -2102,12 +2110,24 @@ class GameEngine {
         for (const object of gameObjectsJson){
           gameObjects.push(GameObject.deserialize(this, object));
         }
-
         this.addObjectsToLevel(levelName, gameObjects);
+
+        if (levelData.shouldResize === false){
+          this.resizeToFit = false;
+          this.setCanvasWidth(levelData.backgroundX);
+          this.setCanvasHeight(levelData.backgroundY);
+        }
+        else{
+          this.setCanvasWidth(globalP5.windowWidth);
+          this.setCanvasHeight(globalP5.windowHeigth);
+          this.resizeToFit = true;
+        }
+
+        if (levelData.levelManagerScriptName !== "" && levelData.levelManagerScriptName !== undefined && levelData.levelManagerScriptName !== null){
+          levelManagerScriptName = levelData.levelManagerScriptName
+        }
       }
 
-     
-    
 
       if (this.currentLevelScript !== null){
         try{
@@ -2130,17 +2150,30 @@ class GameEngine {
   }
 
   saveCurrentLevel(){
-    console.log(this.currentLevelObjects)
     const gameObjects = [];
     for (const object of Object.values(this.currentLevelObjects)){
       gameObjects.push(object.serialize());
     }
 
-    globalP5.loadJSON("/gameData.json", (data) => {
-      data.gameData.levels[this.currentLevel].gameObjects = gameObjects;
-      globalP5.saveJSON(data, "/gameData.json");
-    });
-    
+    if (globalP5.getItem("engineGameData") !== undefined){
+      let data = globalP5.getItem("engineGameData");
+
+      if (data.gameData.levels[this.currentLevel] === undefined){
+        data.gameData.levels[this.currentLevel] = {}
+        data.gameData.levels[this.currentLevel].gameObjects = gameObjects;
+      }
+      else{
+        data.gameData.levels[this.currentLevel].gameObjects = gameObjects;
+      }
+      
+    } 
+
+    else{
+      globalP5.loadJSON("/gameData.json", (data) => {
+        data.gameData.levels[this.currentLevel].gameObjects = gameObjects;
+        globalP5.storeItem("engineGameData", data)
+      });
+    }
   }
 
   /**

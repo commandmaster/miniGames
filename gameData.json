@@ -2,7 +2,7 @@
     "gameData": {
       "levels": {
         "titleScreen": {
-          "levelManagerScriptPath": "",
+          "levelManagerScriptName": "titleLevelManager",
           "shouldResize":false,
           "backgroundX":2560,
           "backgroundY":1440,
