@@ -3,6 +3,9 @@
       "levels": {
         "titleScreen": {
           "levelManagerScriptPath": "",
+          "shouldResize":false,
+          "backgroundX":2560,
+          "backgroundY":1440,
           "gameObjects": [
             {
               "transform": {
