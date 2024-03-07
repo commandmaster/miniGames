@@ -12,29 +12,29 @@ export default class FlappyBirdLevelManager{
         // Set the background image for the game
         this.gameEngine.setBackground(this.gameEngine.imageSystem.getImage("flappyBirdBackground"), this.p5.createVector(2560,1440));
 
-        // Create a bird game object
-        let bird = new MonoBehaviour.GameObject(this.gameEngine, this.p5.createVector(400, 400), "Bird");
+        // // Create a bird game object
+        // let bird = new MonoBehaviour.GameObject(this.gameEngine, this.p5.createVector(400, 400), "Bird");
+        
+        // // Add an animator component to the bird
+        // bird.addAnimator();
+        // // Create animations for the bird
+        // bird.animator.createAnimation("default", "birdIdle", 8, 0.4, 10)
+        // bird.animator.createAnimation("flap", this.gameEngine.imageSystem.getImage("birdFlap"), 7, 0.4, 15)
+        // // Transition to the default animation
+        // bird.animator.transition("default")
 
-        // Add an animator component to the bird
-        bird.addAnimator();
-        // Create animations for the bird
-        bird.animator.createAnimation("default", this.gameEngine.imageSystem.getImage("birdIdle"), 8, 0.4, 10)
-        bird.animator.createAnimation("flap", this.gameEngine.imageSystem.getImage("birdFlap"), 7, 0.4, 15)
-        // Transition to the default animation
-        bird.animator.transition("default")
+        // // Add a tag to the bird
+        // bird.addTag("FlappyBird");
 
-        // Add a tag to the bird
-        bird.addTag("FlappyBird");
+        // // Add a rigid body component to the bird
+        // bird.addRigidBody(3, 1, 0);
+        // bird.rigidBody.gravityScale = 0.05;
+        // // Add a circle collider to the bird
+        // bird.addCircleCollider(43, false, true, this.p5.createVector(53, 42));
 
-        // Add a rigid body component to the bird
-        bird.addRigidBody(3, 1, 0);
-        bird.rigidBody.gravityScale = 0.05;
-        // Add a circle collider to the bird
-        bird.addCircleCollider(43, false, true, this.p5.createVector(53, 42));
-
-        // Add a script component to the bird
-        bird.addScript("birdScript");
-
+        // // Add a script component to the bird
+        // bird.addScript("birdScript");
+        // this.p5.saveJSON(bird.serialize(), "bird.json");
 
         // Create a ground zone game object
         let groundZone = new MonoBehaviour.GameObject(this.gameEngine, this.p5.createVector(0, this.gameEngine.screenHeight - 270 * this.gameEngine.screenHeight/1380), "GroundZone");
@@ -47,7 +47,7 @@ export default class FlappyBirdLevelManager{
         groundZone.addScript("groundZoneScript");
 
         // Add the bird and ground zone to the level
-        this.gameEngine.addObjectsToLevel(this.levelName, [bird, groundZone]);
+        this.gameEngine.addObjectsToLevel(this.levelName, [groundZone]);
 
         // Create a score text button
         this.scoreTxt = this.p5.createButton("Score: 0");

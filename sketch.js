@@ -737,6 +737,9 @@ class Transform{
   
 
   static deserialize({Position, Rotation, Scale}){
+    Position = globalP5.createVector(Position.x, Position.y);
+    Scale = globalP5.createVector(Scale.x, Scale.y);
+    
     return new Transform(Position, Rotation, Scale);
   }
 }
@@ -1080,9 +1083,9 @@ class Animation{
    * @param {number} speed - The speed of the animation. (optional)
    * @param {number} rotation - The rotation angle of the sprite. (optional)
    */
-  constructor(spriteSheetImg, numOfFrames, size=1, speed=10, rotation=0){
+  constructor(animator, spriteSheetImg, numOfFrames, size=1, speed=10, rotation=0){
     if (typeof spriteSheetImg === "string"){
-      this.spriteSheet = globalP5.loadImage(spriteSheetImg);
+      this.spriteSheet = animator.gameObject.gameEngine.imageSystem.getImage(spriteSheetImg);
       this.spriteSheetName = spriteSheetImg;
     }
 
@@ -1091,8 +1094,8 @@ class Animation{
       this.spriteSheetName = null;
     }
     
-    this.frameHeight =  spriteSheetImg.height;
-    this.frameWidth = spriteSheetImg.width / numOfFrames;
+    this.frameHeight =  this.spriteSheet.height;
+    this.frameWidth = this.spriteSheet.width / numOfFrames;
     
     this.rotation = rotation;
     
@@ -1123,25 +1126,21 @@ class Animation{
   serialize(){
     return {
       "spriteSheetName": this.spriteSheetName,
-      frameHeight: this.frameHeight,
-      frameWidth: this.frameWidth,
       rotation: this.rotation,
       numOfFrames: this.numOfFrames,
       size: this.size,
-      frames: this.frames,
       speed: this.speed,
       flipAxisOffset: this.flipAxisOffset,
       animationOffset: this.animationOffset
     };
   }
 
-  static deserialize({spriteSheetName, frameHeight, frameWidth, rotation, numOfFrames, size, frames, speed, flipAxisOffset, animationOffset}){
+  static deserialize({spriteSheetName, rotation, numOfFrames, size, speed, flipAxisOffset, animationOffset}){
     const animation = new Animation(spriteSheetName, numOfFrames, size, speed, rotation);
-    animation.frames = frames;
+    
     animation.flipAxisOffset = flipAxisOffset;
     animation.animationOffset = animationOffset;
-    animation.frameHeight = frameHeight;
-    animation.frameWidth = frameWidth;
+
 
     return animation;
   }
@@ -1180,7 +1179,7 @@ class Animator {
    * @param {number} [rotation=0] - The rotation of the animation.
    */
   createAnimation(name, spriteSheetImg, numOfFrames, size=1, speed=10, rotation=0){
-    this.animations[name] = new Animation(spriteSheetImg, numOfFrames, size, speed, rotation);
+    this.animations[name] = new Animation(this, spriteSheetImg, numOfFrames, size, speed, rotation);
   }
 
   
@@ -1299,9 +1298,13 @@ class Animator {
   }
 
   serialize(){
+    const serializedAnimations = {};
+    for (const key in this.animations){
+      serializedAnimations[key] = this.animations[key].serialize();
+    }
     return {
-      animations: this.animations.map((key) => animations[key].serialize()),
-      currentAnimation: this.currentAnimation,
+      animations: serializedAnimations,
+      currentAnimation: this.currentAnimation.serialize(),
       finishCurrentAnim: this.finishCurrentAnim,
       inTransition: this.inTransition,
       currentFrame: this.currentFrame,
@@ -1315,7 +1318,13 @@ class Animator {
 
   static deserialize(gameObject, {animations, currentAnimation, finishCurrentAnim, inTransition, currentFrame, flip, flipVertical, frameTime, loopCount, animationOffset}){
     const animator = new Animator(gameObject);
-    animator.animations = animations.forEach((key, value) => {animations[key] = Animation.deserialize(value)});
+
+    this.deserializedAnimations = {};
+    for (const key in animations){
+      this.deserializedAnimations[key] = Animation.deserialize(animations[key]);
+    }
+
+    animator.animations = this.deserializedAnimations;
     animator.currentAnimation = currentAnimation;
     animator.finishCurrentAnim = finishCurrentAnim;
     animator.inTransition = inTransition;
@@ -2151,7 +2160,15 @@ class GameEngine {
   }
 
   saveCurrentLevel(){
-    
+    globalP5.loadJSON("./gameData.json", (data) => {
+      if (data.gameData.levels[this.currentLevel] === undefined){
+        data.gameData.levels[this.currentLevel] = {};
+      }
+
+      data.gameData.levels[this.currentLevel].gameObjects = Object.values(this.currentLevelObjects).map(object => object.serialize());
+      console.log(data.gameData.levels[this.currentLevel].gameObjects)
+      globalP5.saveJSON(data, "gameData.json");
+    });
   }
 
   /**

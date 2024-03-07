@@ -47,11 +47,9 @@ export default class TitleLevelManager{
 
         });
 
-        // Add title objects to the level
-        // this.gameEngine.addObjectsToLevel(this.levelName, [moltenTitle, mainTitle, flappyBirdTitle, snakeGameTitle]);
         this.gameEngine.addCameraToLevel(this.levelName, null);
 
-        this.gameEngine.saveCurrentLevel();
+        //this.gameEngine.saveCurrentLevel();
     }
 
     Update(){
