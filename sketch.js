@@ -1135,8 +1135,8 @@ class Animation{
     };
   }
 
-  static deserialize({spriteSheetName, rotation, numOfFrames, size, speed, flipAxisOffset, animationOffset}){
-    const animation = new Animation(spriteSheetName, numOfFrames, size, speed, rotation);
+  static deserialize(animator, {spriteSheetName, rotation, numOfFrames, size, speed, flipAxisOffset, animationOffset}){
+    const animation = new Animation(animator, spriteSheetName, numOfFrames, size, speed, rotation);
     
     animation.flipAxisOffset = flipAxisOffset;
     animation.animationOffset = animationOffset;
@@ -1319,13 +1319,13 @@ class Animator {
   static deserialize(gameObject, {animations, currentAnimation, finishCurrentAnim, inTransition, currentFrame, flip, flipVertical, frameTime, loopCount, animationOffset}){
     const animator = new Animator(gameObject);
 
-    this.deserializedAnimations = {};
+    const deserializedAnimations = {};
     for (const key in animations){
-      this.deserializedAnimations[key] = Animation.deserialize(animations[key]);
+      deserializedAnimations[key] = Animation.deserialize(this, animations[key]);
     }
 
-    animator.animations = this.deserializedAnimations;
-    animator.currentAnimation = currentAnimation;
+    animator.animations = deserializedAnimations;
+    animator.currentAnimation = Animation.deserialize(this, currentAnimation);
     animator.finishCurrentAnim = finishCurrentAnim;
     animator.inTransition = inTransition;
     animator.currentFrame = currentFrame;
