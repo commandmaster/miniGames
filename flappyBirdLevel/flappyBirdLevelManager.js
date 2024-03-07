@@ -8,6 +8,7 @@ export default class FlappyBirdLevelManager{
     }
 
     Start(){
+
         // Set the background image for the game
         this.gameEngine.setBackground(this.gameEngine.imageSystem.getImage("flappyBirdBackground"), this.p5.createVector(2560,1440));
 
@@ -150,6 +151,9 @@ export default class FlappyBirdLevelManager{
                 this.gameEngine.loadLevel("titleScreen", "titleLevelManager");
             });
         });
+
+        this.gameEngine.saveCurrentLevel();
+        console.log(this.p5.getItem("engineGameData"))
     }
 
     Update(){
