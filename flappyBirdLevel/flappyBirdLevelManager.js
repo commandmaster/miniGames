@@ -152,8 +152,7 @@ export default class FlappyBirdLevelManager{
             });
         });
 
-        this.gameEngine.saveCurrentLevel();
-        console.log(this.p5.getItem("engineGameData"))
+        
     }
 
     Update(){

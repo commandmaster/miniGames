@@ -338,7 +338,7 @@ class GameObject {
     gameObject.tags = tags;
     gameObject.ignoreCulling = ignoreCulling;
     gameObject.spriteRenderer = spriteRenderer !== null ? SpriteRenderer.deserialize(gameObject, spriteRenderer) : null;
-    gameObject.rigidBody = rigidBody !== null ? RigidBody.deserialize(gameObject, rigidBody) : null;
+    //gameObject.rigidBody = rigidBody !== null ? RigidBody.deserialize(gameObject, rigidBody) : null;
     gameObject.animator = animator !== null ? Animator.deserialize(gameObject, animator) : null;
     gameObject.scriptNames = scriptNames;
     gameObject.platformerPlayerController = platformerPlayerController !== null ? PlatformerPlayerController.deserialize(gameObject.rigidBody, platformerPlayerController) : null;
@@ -835,6 +835,7 @@ class RigidBody {
   }
 
   static deserialize(gameObject, {mass, bounce, drag, gravityScale, maxSpeed}){
+    console.log(mass)
     return new RigidBody(gameObject, mass, bounce, drag, gravityScale, maxSpeed);
   }
 }
