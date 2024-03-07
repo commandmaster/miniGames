@@ -2094,7 +2094,7 @@ class GameEngine {
 
     
     
-    globalP5.loadJSON("/gameData.json", (data) => {
+    globalP5.loadJSON("./gameData.json", (data) => {
       let levelData = data.gameData.levels[levelName];
     
 
