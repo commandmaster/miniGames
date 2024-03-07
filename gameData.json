@@ -191,7 +191,6 @@
         },
         "flappyBird":{
           "levelManagerScriptName": "flappyBirdLevelManager",
-          "shouldResize":true,
           "gameObjects":[
             {
               "transform": {
@@ -254,7 +253,7 @@
                     }
                   },
                   "flap": {
-                    "spriteSheetName": null,
+                    "spriteSheetName": "birdFlap",
                     "rotation": 0,
                     "numOfFrames": 7,
                     "size": 0.4,

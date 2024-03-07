@@ -260,7 +260,7 @@ class GameObject {
    */
   addTopDownPlayerController(accelerationScale, deccelerationScale, maxSpeed, horizontalBias=1){
     this.topDownPlayerController = new TopDownPlayerController(this.rigidBody, accelerationScale, deccelerationScale, maxSpeed, horizontalBias)
-    console.log(this.topDownPlayerController)
+
   }
   
   
@@ -837,7 +837,10 @@ class RigidBody {
   }
 
   static deserialize(gameObject, {mass, bounce, drag, gravityScale, maxSpeed}){
-    return new RigidBody(gameObject, mass, bounce, drag, gravityScale, maxSpeed);
+    const rigidBody = new RigidBody(gameObject, mass, bounce, drag);
+    rigidBody.gravityScale = gravityScale;
+    rigidBody.maxSpeed = maxSpeed;
+    return rigidBody;
   }
 }
 
@@ -995,7 +998,7 @@ class PlatformerPlayerController{
       if (object.hasTag('Ground')){
           this.isGrounded = true;
           this.jumps = 1;
-          console.log('test')
+
           }
     }
     
@@ -1094,6 +1097,7 @@ class Animation{
       this.spriteSheetName = null;
     }
     
+
     this.frameHeight =  this.spriteSheet.height;
     this.frameWidth = this.spriteSheet.width / numOfFrames;
     
@@ -1140,8 +1144,6 @@ class Animation{
     
     animation.flipAxisOffset = flipAxisOffset;
     animation.animationOffset = animationOffset;
-
-
     return animation;
   }
   
@@ -1166,6 +1168,8 @@ class Animator {
     this.frameTime = 0;
     this.loopCount = 0;
 
+    this.defaultAnimationName = null;
+
     this.animationOffset = globalP5.createVector(0,0)
   }
   
@@ -1180,6 +1184,9 @@ class Animator {
    */
   createAnimation(name, spriteSheetImg, numOfFrames, size=1, speed=10, rotation=0){
     this.animations[name] = new Animation(this, spriteSheetImg, numOfFrames, size, speed, rotation);
+    if (this.defaultAnimationName === null){
+      this.defaultAnimationName = name;
+    }
   }
 
   
@@ -1235,7 +1242,7 @@ class Animator {
       }
     }
     
-    if (this.currentAnimation !== null) {
+    if (this.currentAnimation !== null && this.currentAnimation !== undefined) {
     
     const frameInfo = this.currentAnimation.frames[this.currentFrame];
     globalP5.push();
@@ -1312,20 +1319,23 @@ class Animator {
       flipVertical: this.flipVertical,
       frameTime: this.frameTime,
       loopCount: this.loopCount,
-      animationOffset: this.animationOffset
+      animationOffset: this.animationOffset,
+      defaultAnimationName: this.defaultAnimationName
     };
   }
 
-  static deserialize(gameObject, {animations, currentAnimation, finishCurrentAnim, inTransition, currentFrame, flip, flipVertical, frameTime, loopCount, animationOffset}){
+  static deserialize(gameObject, {animations, currentAnimation, finishCurrentAnim, inTransition, currentFrame, flip, flipVertical, frameTime, loopCount, animationOffset, defaultAnimationName}){
     const animator = new Animator(gameObject);
+
+    
 
     const deserializedAnimations = {};
     for (const key in animations){
-      deserializedAnimations[key] = Animation.deserialize(this, animations[key]);
+      deserializedAnimations[key] = Animation.deserialize(animator, animations[key]);
     }
 
     animator.animations = deserializedAnimations;
-    animator.currentAnimation = Animation.deserialize(this, currentAnimation);
+    animator.currentAnimation = Animation.deserialize(animator, currentAnimation);
     animator.finishCurrentAnim = finishCurrentAnim;
     animator.inTransition = inTransition;
     animator.currentFrame = currentFrame;
@@ -1335,6 +1345,7 @@ class Animator {
     animator.loopCount = loopCount;
     animator.animationOffset = animationOffset;
 
+    animator.transition(defaultAnimationName, true);
     return animator;
   }
 }
@@ -1353,28 +1364,28 @@ class BoxCollider {
   constructor(gameObject, colliderSize, isTrigger=false, isContinuous=false, colliderOffset=globalP5.createVector(0,0)){
     this.colliderType = "rect";
     this.gameObject = gameObject;
-    this.colliderSize = colliderSize;
-    this.colliderOffset = colliderOffset;
+    this.colliderSize = globalP5.createVector(colliderSize.x, colliderSize.y);
+    this.colliderOffset = globalP5.createVector(colliderOffset.x, colliderOffset.y);
 
     this.isTrigger = isTrigger;
     this.isContinuous = isContinuous
     
     this.colliderTags = []
     
-    this.collidingWith =[]
+    this.collidingWith = []
     
     this.transform = {};
     this.transform.Position = this.gameObject.transform.Position.copy().add(this.colliderOffset);
     
-    this.topLeft = this.transform.Position;
-    this.topRight = globalP5.createVector(this.transform.Position.x + colliderSize.x, this.transform.Position.y);
-    this.bottomLeft = globalP5.createVector(this.transform.Position.x, this.transform.Position.y  + colliderSize.y);
-    this.bottomRight = globalP5.createVector(this.transform.Position.x + colliderSize.x, this.transform.Position.y + colliderSize.y);
+    this.topLeft = this.transform.Position.copy();
+    this.topRight = globalP5.createVector(this.transform.Position.x + this.colliderSize.x, this.transform.Position.y);
+    this.bottomLeft = globalP5.createVector(this.transform.Position.x, this.transform.Position.y  + this.colliderSize.y);
+    this.bottomRight = globalP5.createVector(this.transform.Position.x + this.colliderSize.x, this.transform.Position.y + this.colliderSize.y);
     
-    this.midLeft = globalP5.createVector(this.transform.Position.x, this.transform.Position.y  + colliderSize.y / 2);
-    this.midRight = globalP5.createVector(this.transform.Position.x + colliderSize.x, this.transform.Position.y + colliderSize.y /2);
-    this.midTop = globalP5.createVector(this.transform.Position.x + colliderSize.x / 2, this.transform.Position.y);
-    this.midBottom = globalP5.createVector(this.transform.Position.x + colliderSize.x / 2, this.transform.Position.y + colliderSize.y);
+    this.midLeft = globalP5.createVector(this.transform.Position.x, this.transform.Position.y  + this.colliderSize.y / 2);
+    this.midRight = globalP5.createVector(this.transform.Position.x + this.colliderSize.x, this.transform.Position.y + this.colliderSize.y /2);
+    this.midTop = globalP5.createVector(this.transform.Position.x + this.colliderSize.x / 2, this.transform.Position.y);
+    this.midBottom = globalP5.createVector(this.transform.Position.x + this.colliderSize.x / 2, this.transform.Position.y + this.colliderSize.y);
     
   }
   
@@ -1418,7 +1429,7 @@ class BoxCollider {
   update(){
     this.transform.Position = this.gameObject.transform.Position.copy().add(this.colliderOffset)
     
-    this.topLeft = this.transform.Position;
+    this.topLeft = this.transform.Position.copy();
     this.topRight = globalP5.createVector(this.transform.Position.x + this.colliderSize.x, this.transform.Position.y);
     this.bottomLeft = globalP5.createVector(this.transform.Position.x, this.transform.Position.y  + this.colliderSize.y);
     this.bottomRight = globalP5.createVector(this.transform.Position.x + this.colliderSize.x, this.transform.Position.y + this.colliderSize.y);
@@ -1444,6 +1455,10 @@ class BoxCollider {
     const collider = new BoxCollider(gameObject, colliderSize, isTrigger, isContinuous, colliderOffset);
     collider.colliderTags = colliderTags;
     collider.colliderType = colliderType;
+
+    collider.colliderSize = globalP5.createVector(colliderSize.x, colliderSize.y);
+    collider.colliderOffset = globalP5.createVector(colliderOffset.x, colliderOffset.y);
+
     return collider;
   }
 }
@@ -1461,7 +1476,7 @@ class CircleCollider {
     this.colliderType = "circle";
     this.gameObject = gameObject;
     this.colliderRadius = colliderRadius;
-    this.colliderOffset = colliderOffset;
+    this.colliderOffset = globalP5.createVector(colliderOffset.x, colliderOffset.y);
 
     this.isTrigger = isTrigger;
     this.isContinuous = isContinuous; 
@@ -1531,6 +1546,9 @@ class CircleCollider {
     const collider = new CircleCollider(gameObject, colliderRadius, isTrigger, isContinuous, colliderOffset);
     collider.colliderTags = colliderTags;
     collider.colliderType = colliderType;
+
+    collider.colliderOffset = globalP5.createVector(colliderOffset.x, colliderOffset.y);
+
     return collider;
   }
 
@@ -1555,7 +1573,6 @@ class ImageSystem{
     const img = globalP5.loadImage(imagePath)
     this.Images[name] = img
     
-    console.log(this.Images)
   }
   
   /**
@@ -1590,7 +1607,7 @@ class ScriptSystem{
    */
   async loadScript(scriptName, scriptPath){
     this.Scripts[scriptName] = await import(scriptPath);
-    console.log(this.Scripts[scriptName]);
+
   }
   
   /**
@@ -2021,8 +2038,6 @@ class GameEngine {
       this.screenWidth = globalP5.windowWidth;
       this.screenHeight = globalP5.windowHeight;
 
-      console.log(this.screenWidth)
-      console.log(this.screenHeight)
     }
     
 
@@ -2030,7 +2045,6 @@ class GameEngine {
 
 
     waitForCondition(() => {return this.gameStateScript !== null}).then(() => {
-      console.log('test')
       this.gameStateScript.Setup();
     });
     
@@ -2113,6 +2127,20 @@ class GameEngine {
 
       
       if (levelData !== undefined){
+        if (levelData.shouldResize === false && levelData.shouldResize !== undefined && levelData.shouldResize !== null){
+          
+          this.resizeToFit = false;
+          this.setCanvasWidth(levelData.backgroundX);
+          this.setCanvasHeight(levelData.backgroundY);
+        }
+        
+        else{
+          this.setCanvasWidth(globalP5.windowWidth);
+          this.setCanvasHeight(globalP5.windowHeight);
+          this.resizeToFit = true;
+        }
+
+        
         const gameObjectsJson = levelData.gameObjects;
         
         const gameObjects = [];
@@ -2121,17 +2149,7 @@ class GameEngine {
         }
         this.addObjectsToLevel(levelName, gameObjects);
 
-        if (levelData.shouldResize === false){
-          this.resizeToFit = false;
-          this.setCanvasWidth(levelData.backgroundX);
-          this.setCanvasHeight(levelData.backgroundY);
-        }
         
-        else{
-          this.setCanvasWidth(globalP5.windowWidth);
-          this.setCanvasHeight(globalP5.windowHeigth);
-          this.resizeToFit = true;
-        }
 
         if (levelData.levelManagerScriptName !== "" && levelData.levelManagerScriptName !== undefined && levelData.levelManagerScriptName !== null){
           levelManagerScriptName = levelData.levelManagerScriptName
@@ -2166,7 +2184,6 @@ class GameEngine {
       }
 
       data.gameData.levels[this.currentLevel].gameObjects = Object.values(this.currentLevelObjects).map(object => object.serialize());
-      console.log(data.gameData.levels[this.currentLevel].gameObjects)
       globalP5.saveJSON(data, "gameData.json");
     });
   }
@@ -2214,7 +2231,6 @@ class GameEngine {
         import(scriptPath)
             .then(script => {
                 const scriptInstance = new script.default(globalP5, this);
-                console.log(scriptInstance);
                 resolve(scriptInstance);
             })
             .catch(error => {
@@ -2592,7 +2608,6 @@ class GameEngine {
 
     
     if (globalP5.min(t1, t2) >= 0 && globalP5.min(t1, t2) <= 1){
-      //console.log(true)
       return true;
     }
     
@@ -2806,7 +2821,6 @@ class GameEngine {
 
     const objects = gameObjectValues;
       for (let i = 0; i < objects.length; i++) {
-        //console.log(objects[i])
         if (objects[i].ignoreCulling){
           culledObjects.push(objects[i])
         }
@@ -2822,7 +2836,6 @@ class GameEngine {
 
     physCheckObject.delete()
     
-    //console.log(culledObjects)
     return culledObjects;
   }
 
