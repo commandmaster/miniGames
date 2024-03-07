@@ -1,4 +1,3 @@
-
 // Mini Game - Interactive Scene
 // Bennett Friesen
 // 2/29/2024
@@ -338,7 +337,7 @@ class GameObject {
     gameObject.tags = tags;
     gameObject.ignoreCulling = ignoreCulling;
     gameObject.spriteRenderer = spriteRenderer !== null ? SpriteRenderer.deserialize(gameObject, spriteRenderer) : null;
-    //gameObject.rigidBody = rigidBody !== null ? RigidBody.deserialize(gameObject, rigidBody) : null;
+    gameObject.rigidBody = rigidBody !== null ? RigidBody.deserialize(gameObject, rigidBody) : null;
     gameObject.animator = animator !== null ? Animator.deserialize(gameObject, animator) : null;
     gameObject.scriptNames = scriptNames;
     gameObject.platformerPlayerController = platformerPlayerController !== null ? PlatformerPlayerController.deserialize(gameObject.rigidBody, platformerPlayerController) : null;
@@ -835,7 +834,6 @@ class RigidBody {
   }
 
   static deserialize(gameObject, {mass, bounce, drag, gravityScale, maxSpeed}){
-    console.log(mass)
     return new RigidBody(gameObject, mass, bounce, drag, gravityScale, maxSpeed);
   }
 }
@@ -2098,12 +2096,7 @@ class GameEngine {
     
     globalP5.loadJSON("/gameData.json", (data) => {
       let levelData = data.gameData.levels[levelName];
-      if (globalP5.getItem("engineGameData")){
-        if (globalP5.getItem("engineGameData").gameData.levels[levelName]){
-          levelData = globalP5.getItem("engineGameData").gameData.levels[levelName];
-        }
-      }
-
+    
 
       this.currentLevel = levelName;
       this.currentLevelObjects = {};
@@ -2124,6 +2117,7 @@ class GameEngine {
           this.setCanvasWidth(levelData.backgroundX);
           this.setCanvasHeight(levelData.backgroundY);
         }
+        
         else{
           this.setCanvasWidth(globalP5.windowWidth);
           this.setCanvasHeight(globalP5.windowHeigth);
@@ -2157,30 +2151,7 @@ class GameEngine {
   }
 
   saveCurrentLevel(){
-    const gameObjects = [];
-    for (const object of Object.values(this.currentLevelObjects)){
-      gameObjects.push(object.serialize());
-    }
-
-    if (globalP5.getItem("engineGameData") !== null){
-      let data = globalP5.getItem("engineGameData");
-
-      if (data.gameData.levels[this.currentLevel] === undefined){
-        data.gameData.levels[this.currentLevel] = {}
-        data.gameData.levels[this.currentLevel].gameObjects = gameObjects;
-      }
-      else{
-        data.gameData.levels[this.currentLevel].gameObjects = gameObjects;
-      }
-      
-    } 
-
-    else{
-      globalP5.loadJSON("/gameData.json", (data) => {
-        data.gameData.levels[this.currentLevel].gameObjects = gameObjects;
-        globalP5.storeItem("engineGameData", data)
-      });
-    }
+    
   }
 
   /**
@@ -2248,6 +2219,7 @@ class GameEngine {
          return; 
       }
       
+    
       if (collider1.colliderType === "circle" && collider2.colliderType === "circle"){
 
         let continuousCheckCircle1;

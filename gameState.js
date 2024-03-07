@@ -37,12 +37,14 @@ export default class GameState{
         this.gameEngine.imageSystem.addImage("birdIdle", "./images/flappyBirdIdleSheet.png");
         this.gameEngine.imageSystem.addImage("birdFlap", "./images/flappyJumpSheet.png");
 
-
+        this.gameEngine.inputSystem.addKeyboardInput("menu", "m", "bool");
+        this.gameEngine.inputSystem.addBindToKeyboardInput("menu", 77);
     }
 
     Setup(){
         // Load Title Screen
         this.gameEngine.loadLevel("titleScreen", "titleLevelManager");
+        
         
 
         window.addEventListener("resize", () => {
@@ -58,6 +60,10 @@ export default class GameState{
 
     Update(){
       // Runs every frame
+
+      if (this.gameEngine.inputSystem.getInputDown("menu")){
+        this.gameEngine.loadLevel("titleScreen", "titleLevelManager");
+      }
     }
 
   }
